@@ -1,0 +1,68 @@
+{{ define "admin/dashboard.html" }}
+{{ template "admin/layout.html" . }}
+
+{{ template "admin/sidebar.html" . }}
+
+<main class="main-content">
+  
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Дашборд</h1>
+      <p class="page-sub">Общая статистика учебной программы</p>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-top: 0.5rem;">
+    
+    <div class="stat-card" style="display: flex; align-items: center; gap: 1rem;">
+      <div class="stat-icon" style="background: var(--accent-bg); color: var(--accent);">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5.784 6A2.24 2.24 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.3 6.3 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1zM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/>
+        </svg>
+      </div>
+      <div>
+        <div class="stat-value">{{ .stats.TotalEmployees }}</div>
+        <div class="stat-label">Сотрудников</div>
+      </div>
+    </div>
+
+    <div class="stat-card" style="display: flex; align-items: center; gap: 1rem;">
+      <div class="stat-icon" style="background: var(--purple-bg); color: var(--purple);">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8.5 13.5A.5.5 0 0 1 9 13h1.5a.5.5 0 0 1 0 1H9a.5.5 0 0 1-.5-.5M2 2a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1zM1 3a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 .5 .5v8a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5zm2 9.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5"/>
+        </svg>
+      </div>
+      <div>
+        <div class="stat-value">{{ .stats.TotalCourses }}</div>
+        <div class="stat-label">Курсов</div>
+      </div>
+    </div>
+
+    <div class="stat-card" style="display: flex; align-items: center; gap: 1rem;">
+      <div class="stat-icon" style="background: var(--warning-bg); color: var(--warning);">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M4 11.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5m0-3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5m0-3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5m0-3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5"/>
+        </svg>
+      </div>
+      <div>
+        <div class="stat-value">{{ .stats.TotalTests }}</div>
+        <div class="stat-label">Тестов</div>
+      </div>
+    </div>
+
+    <div class="stat-card" style="display: flex; align-items: center; gap: 1rem;">
+      <div class="stat-icon" style="background: var(--success-bg); color: var(--success);">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="stat-value">{{ .stats.CompletedAssignments }}</div>
+        <div class="stat-label">Завершено</div>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+{{ end }}

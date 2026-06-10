@@ -1,0 +1,78 @@
+
+{{ define "admin/courses.html" }}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ .title }} — CorpLMS</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+{{ template "admin/layout.html" . }}
+</head>
+<body>
+
+{{ template "admin/sidebar.html" . }}
+<main class="main-content">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Курсы</h1>
+      <p class="page-sub">Управление учебным каталогом</p>
+    </div>
+    <a href="/admin/courses/new" class="btn-primary-custom">
+      <i class="bi bi-plus-circle-fill"></i> Создать курс
+    </a>
+  </div>
+
+  <div class="card">
+    <div class="card-header-custom">
+      <span class="card-header-title">Все курсы ({{ len .courses }})</span>
+    </div>
+    {{ if .courses }}
+    <div class="table-responsive">
+      <table class="table mb-0">
+        <thead>
+          <tr>
+            <th>#</th><th>Название</th><th>Описание</th><th>Длительность</th><th>Записано</th><th>Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{ range .courses }}
+          <tr>
+            <td style="color:var(--text-muted);font-size:0.78rem">{{ .ID }}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:10px">
+                <div class="course-icon-sm"><i class="bi bi-journal-text"></i></div>
+                <span style="font-weight:600">{{ .Title }}</span>
+              </div>
+            </td>
+            <td style="color:var(--text-muted);max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ .Description }}</td>
+            <td><span class="badge badge-purple"><i class="bi bi-clock me-1"></i>{{ .Duration }}</span></td>
+            <td><span class="badge badge-accent">{{ if $.enrolled }}{{ index $.enrolled .ID }}{{ else }}0{{ end }} чел.</span></td>
+            <td>
+              <div style="display:flex;gap:5px">
+                <a href="/admin/courses/{{ .ID }}/edit" class="btn-sm-action btn-edit"><i class="bi bi-pencil-fill"></i> Изменить</a>
+                <form method="POST" action="/admin/courses/{{ .ID }}/delete" style="display:inline" onsubmit="return confirm('Удалить этот курс?')">
+                  <button type="submit" class="btn-sm-action btn-delete"><i class="bi bi-trash-fill"></i> Удалить</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {{ end }}
+        </tbody>
+      </table>
+    </div>
+    {{ else }}
+    <div class="empty-state">
+      <i class="bi bi-journal-x"></i>
+      Курсов пока нет. <a href="/admin/courses/new">Создать первый курс.</a>
+    </div>
+    {{ end }}
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+{{ end }}

@@ -1,0 +1,94 @@
+{{ define "admin/employee_profile.html" }}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ .title }} — CorpLMS</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+{{ template "admin/layout.html" . }}
+</head>
+<body>
+
+{{ template "admin/sidebar.html" . }}
+<main class="main-content">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Профиль сотрудника</h1>
+      <p class="page-sub"><a href="/admin/employees" style="color:var(--text-muted);text-decoration:none">← Назад к сотрудникам</a></p>
+    </div>
+    <a href="/admin/employees/{{ .employee.ID }}/edit" class="btn-primary-custom">
+      <i class="bi bi-pencil-fill"></i> Редактировать
+    </a>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-4">
+      <div class="card text-center p-4">
+        <div class="emp-avatar-lg">{{ slice (.employee.Name | printf "%s") 0 1 }}</div>
+        <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:0.2rem;color:var(--text-primary)">{{ .employee.Name }}</h3>
+        <p style="color:var(--text-muted);font-size:0.82rem;margin-bottom:1.25rem">{{ .employee.Email }}</p>
+        <span class="badge badge-accent" style="margin:0 auto">Сотрудник</span>
+        <hr style="border-color:var(--border-soft);margin:1.25rem 0">
+        <div style="display:flex;justify-content:space-around">
+          <div>
+            <div style="font-size:1.4rem;font-weight:700;color:var(--text-primary)">{{ len .employee.Assignments }}</div>
+            <div style="font-size:0.72rem;color:var(--text-muted)">Курсов</div>
+          </div>
+          <div>
+            {{ $completed := 0 }}
+            {{ range .employee.Assignments }}{{ if eq .Status "completed" }}{{ $completed = add $completed 1 }}{{ end }}{{ end }}
+            <div style="font-size:1.4rem;font-weight:700;color:var(--success)">{{ $completed }}</div>
+            <div style="font-size:0.72rem;color:var(--text-muted)">Завершено</div>
+          </div>
+          <div>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.5rem">Добавлен</div>
+            <div style="font-size:0.8rem;color:var(--text-sub);font-weight:500">{{ formatDate .employee.CreatedAt }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header-custom"><span class="card-header-title">Назначенные курсы</span></div>
+        {{ if .employee.Assignments }}
+        <div class="table-responsive">
+          <table class="table mb-0">
+            <thead>
+              <tr><th>Курс</th><th>Длительность</th><th>Статус</th><th>Назначен</th></tr>
+            </thead>
+            <tbody>
+              {{ range .employee.Assignments }}
+              <tr>
+                <td style="font-weight:600">{{ .Course.Title }}</td>
+                <td style="color:var(--text-muted)">{{ .Course.Duration }}</td>
+                <td>
+                  {{ if eq .Status "not_started" }}<span class="badge badge-not-started">Не начат</span>
+                  {{ else if eq .Status "in_progress" }}<span class="badge badge-in-progress">В процессе</span>
+                  {{ else if eq .Status "completed" }}<span class="badge badge-completed">Завершён</span>
+                  {{ end }}
+                </td>
+                <td style="color:var(--text-muted)">{{ formatDate .CreatedAt }}</td>
+              </tr>
+              {{ end }}
+            </tbody>
+          </table>
+        </div>
+        {{ else }}
+        <div class="empty-state">
+          <i class="bi bi-journal-x"></i>
+          Курсов не назначено. <a href="/admin/assignments/new">Назначить курс.</a>
+        </div>
+        {{ end }}
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+{{ end }}

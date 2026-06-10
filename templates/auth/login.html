@@ -1,0 +1,145 @@
+{{ define "auth/login.html" }}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход — CorpLMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base:    #f7f0ee;
+            --bg-panel:   #ffffff;
+            --border:     #edddd8;
+            --text-primary: #2c1a17;
+            --text-muted: #b09590;
+            --text-sub:   #7a5c57;
+            --accent:     #c9796a;
+            --accent-hover: #b86a5c;
+            --danger:     #c95c5c;
+            --danger-bg:  rgba(201,92,92,0.10);
+        }
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            background: var(--bg-base);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+        }
+        .login-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 4px 24px rgba(44,26,23,0.10), 0 1px 4px rgba(44,26,23,0.06);
+        }
+        .brand {
+            display: flex; align-items: center; gap: 12px; margin-bottom: 2rem;
+        }
+        .brand-icon {
+            width: 48px; height: 48px;
+            background: linear-gradient(135deg, #c9796a, #9b7ac9);
+            border-radius: 13px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; color: white; flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(201,121,106,0.30);
+        }
+        .brand-name { font-size: 1.35rem; font-weight: 700; color: var(--text-primary); letter-spacing: -0.3px; }
+        .brand-sub  { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.2px; font-weight: 500; }
+        h2 { color: var(--text-primary); font-size: 1.05rem; font-weight: 700; margin-bottom: 0.2rem; }
+        .subtitle { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.75rem; }
+        .form-label {
+            color: var(--text-sub); font-size: 0.73rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.4rem; display: block;
+        }
+        .form-control {
+            background: var(--bg-base); border: 1px solid var(--border);
+            color: var(--text-primary); border-radius: 10px;
+            padding: 0.65rem 0.875rem; font-size: 0.875rem; width: 100%;
+            transition: border-color 0.15s, box-shadow 0.15s; font-family: inherit;
+        }
+        .form-control:focus {
+            background: #fff; border-color: var(--accent); color: var(--text-primary);
+            box-shadow: 0 0 0 3px rgba(201,121,106,0.15); outline: none;
+        }
+        .form-control::placeholder { color: var(--text-muted); }
+        .btn-login {
+            background: var(--accent); border: none; border-radius: 10px;
+            padding: 0.7rem; font-weight: 600; font-size: 0.9rem; color: white;
+            width: 100%; transition: background 0.18s, box-shadow 0.18s, transform 0.18s;
+            margin-top: 0.5rem; cursor: pointer; font-family: inherit;
+            box-shadow: 0 2px 8px rgba(201,121,106,0.25);
+        }
+        .btn-login:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 4px 16px rgba(201,121,106,0.35); transform: translateY(-1px); color: white;
+        }
+        .alert-danger {
+            background: var(--danger-bg);
+            border: 1px solid rgba(201,92,92,0.25);
+            color: var(--danger); border-radius: 10px;
+            font-size: 0.855rem; padding: 0.65rem 0.875rem;
+            display: flex; align-items: center; gap: 8px; margin-bottom: 1.25rem;
+        }
+        .hint {
+            margin-top: 1.5rem; padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            text-align: center; color: var(--text-muted); font-size: 0.78rem;
+        }
+        .hint code {
+            background: var(--bg-base); color: var(--text-sub);
+            padding: 0.1rem 0.4rem; border-radius: 5px;
+            font-size: 0.78rem; border: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="brand">
+            <div class="brand-icon"><i class="bi bi-mortarboard-fill"></i></div>
+            <div>
+                <div class="brand-name">CorpLMS</div>
+                <div class="brand-sub">Учебная платформа</div>
+            </div>
+        </div>
+
+        <h2>Добро пожаловать</h2>
+        <p class="subtitle">Войдите в систему, чтобы продолжить</p>
+
+        {{ if .error }}
+        <div class="alert-danger">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            {{ .error }}
+        </div>
+        {{ end }}
+
+        <form method="POST" action="/login">
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control" placeholder="you@company.com" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Пароль</label>
+                <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn-login">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Войти
+            </button>
+        </form>
+
+        <div class="hint">
+            <strong style="color:var(--text-sub)">Демо-доступ</strong><br>
+            Админ: <code>admin@company.com</code> / <code>admin123</code><br>
+            Сотрудник: <code>alice@company.com</code> / <code>password123</code>
+        </div>
+    </div>
+</body>
+</html>
+{{ end }}

@@ -1,0 +1,243 @@
+{{ define "admin/assignments.html" }}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ .title }} — CorpLMS</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+{{ template "admin/layout.html" . }}
+</head>
+<body>
+{{ template "admin/sidebar.html" . }}
+<main class="main-content">
+  <div class="page-header">
+    <div><h1 class="page-title">Назначения</h1><p class="page-sub">Отслеживание прогресса сотрудников</p></div>
+    <button class="btn-primary-custom btn-green" onclick="openModal('assignModal')">
+      <i class="bi bi-clipboard-plus-fill"></i> Назначить
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="card mb-3" style="padding:1rem 1.25rem">
+    <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap">
+      <div>
+        <div style="font-size:.62rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700;margin-bottom:.4rem">Тип</div>
+        <div style="display:flex;gap:.35rem">
+          <a href="/admin/assignments{{ if .filterStatus }}?status={{ .filterStatus }}{{ end }}"
+             style="display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .75rem;border-radius:20px;font-size:.78rem;font-weight:600;text-decoration:none;transition:all .15s;
+             {{ if eq .filterType "" }}background:var(--accent);color:#fff{{ else }}background:var(--bg-base,#f7f0ee);color:var(--text-sub);border:1px solid var(--border){{ end }}">
+            Все
+          </a>
+          <a href="/admin/assignments?type=course{{ if .filterStatus }}&status={{ .filterStatus }}{{ end }}"
+             style="display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .75rem;border-radius:20px;font-size:.78rem;font-weight:600;text-decoration:none;transition:all .15s;
+             {{ if eq .filterType "course" }}background:var(--purple);color:#fff{{ else }}background:var(--bg-base,#f7f0ee);color:var(--text-sub);border:1px solid var(--border){{ end }}">
+            <i class="bi bi-easel2-fill"></i> Курсы
+          </a>
+          <a href="/admin/assignments?type=test{{ if .filterStatus }}&status={{ .filterStatus }}{{ end }}"
+             style="display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .75rem;border-radius:20px;font-size:.78rem;font-weight:600;text-decoration:none;transition:all .15s;
+             {{ if eq .filterType "test" }}background:var(--warning);color:#fff{{ else }}background:var(--bg-base,#f7f0ee);color:var(--text-sub);border:1px solid var(--border){{ end }}">
+            <i class="bi bi-ui-checks"></i> Тесты
+          </a>
+        </div>
+      </div>
+      <div style="width:1px;height:40px;background:var(--border)"></div>
+      <div>
+        <div style="font-size:.62rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700;margin-bottom:.4rem">Статус</div>
+        <div style="display:flex;gap:.35rem">
+          <a href="/admin/assignments{{ if .filterType }}?type={{ .filterType }}{{ end }}"
+             style="display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .75rem;border-radius:20px;font-size:.78rem;font-weight:600;text-decoration:none;transition:all .15s;
+             {{ if eq .filterStatus "" }}background:var(--accent);color:#fff{{ else }}background:var(--bg-base,#f7f0ee);color:var(--text-sub);border:1px solid var(--border){{ end }}">
+            Все
+          </a>
+          <a href="/admin/assignments?{{ if .filterType }}type={{ .filterType }}&{{ end }}status=not_started"
+             style="display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .75rem;border-radius:20px;font-size:.78rem;font-weight:600;text-decoration:none;transition:all .15s;
+             {{ if eq .filterStatus "not_started" }}background:rgba(176,149,144,.4);color:var(--text-primary){{ else }}background:var(--bg-base,#f7f0ee);color:var(--text-sub);border:1px solid var(--border){{ end }}">
+            Не начаты
+          </a>
+          <a href="/admin/assignments?{{ if .filterType }}type={{ .filterType }}&{{ end }}status=in_progress"
+             style="display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .75rem;border-radius:20px;font-size:.78rem;font-weight:600;text-decoration:none;transition:all .15s;
+             {{ if eq .filterStatus "in_progress" }}background:var(--warning);color:#fff{{ else }}background:var(--bg-base,#f7f0ee);color:var(--text-sub);border:1px solid var(--border){{ end }}">
+            В процессе
+          </a>
+          <a href="/admin/assignments?{{ if .filterType }}type={{ .filterType }}&{{ end }}status=completed"
+             style="display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .75rem;border-radius:20px;font-size:.78rem;font-weight:600;text-decoration:none;transition:all .15s;
+             {{ if eq .filterStatus "completed" }}background:var(--success);color:#fff{{ else }}background:var(--bg-base,#f7f0ee);color:var(--text-sub);border:1px solid var(--border){{ end }}">
+            Завершены
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header-custom"><span class="card-header-title">Назначения ({{ len .rows }})</span></div>
+    {{ if .rows }}
+    <div class="table-responsive">
+      <table class="table mb-0">
+        <thead><tr><th>Сотрудник</th><th>Тип</th><th>Статус</th><th>Назначен</th><th></th></tr></thead>
+        <tbody>
+          {{ range .rows }}
+          <tr>
+            <td style="font-weight:600">{{ .User.Name }}</td>
+            <td>
+              {{ if isCourse .TargetType }}<span class="badge badge-purple"><i class="bi bi-easel2-fill me-1"></i>Курс #{{ .TargetID }}</span>
+              {{ else if isTest .TargetType }}<span class="badge" style="background:var(--warning-bg);color:var(--warning)"><i class="bi bi-ui-checks me-1"></i>Тест #{{ .TargetID }}</span>
+              {{ end }}
+            </td>
+            <td>
+              {{ if eq .Status "not_started" }}<span class="badge badge-not-started">Не начат</span>
+              {{ else if eq .Status "in_progress" }}<span class="badge badge-in-progress">В процессе</span>
+              {{ else if eq .Status "completed" }}<span class="badge badge-completed">Завершён</span>
+              {{ end }}
+            </td>
+            <td style="color:var(--text-muted);font-size:.8rem">{{ formatDate .CreatedAt }}</td>
+            <td>
+              <form method="POST" action="/admin/assignments/{{ .ID }}/delete" style="display:inline" onsubmit="return confirm('Удалить назначение?')">
+                <button type="submit" class="btn-sm-action btn-delete"><i class="bi bi-trash-fill"></i> Удалить</button>
+              </form>
+            </td>
+          </tr>
+          {{ end }}
+        </tbody>
+      </table>
+    </div>
+    {{ else }}
+    <div class="empty-state"><i class="bi bi-clipboard-x"></i>Назначений не найдено.</div>
+    {{ end }}
+  </div>
+</main>
+
+<!-- Assign modal -->
+<div id="assignModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header-row">
+      <h5 class="modal-title-text"><i class="bi bi-clipboard-plus-fill me-2" style="color:var(--success)"></i>Назначить</h5>
+      <button class="modal-close-btn" onclick="closeModal('assignModal')"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    <div class="form-label">Что назначить</div>
+    <div class="d-flex gap-2 mb-3">
+      <label class="chip-label" id="typeCourse" onclick="toggleType('course')">
+        <span class="chip-dot"></span><i class="bi bi-easel2-fill me-1"></i> Курс
+      </label>
+      <label class="chip-label" id="typeTest" onclick="toggleType('test')">
+        <span class="chip-dot"></span><i class="bi bi-ui-checks me-1"></i> Тест
+      </label>
+    </div>
+
+    <div id="courseDiv" class="mb-3" style="display:none">
+      <label class="form-label">Выберите курсы (можно несколько)</label>
+      <div class="chip-list mt-1" id="courseList">
+        {{ range .courses }}
+        <label class="chip-label" data-id="{{ .ID }}" onclick="togglePick(this)"><span class="chip-dot"></span>{{ .Title }}</label>
+        {{ else }}
+        <span style="color:var(--text-muted);font-size:.8rem">Курсов пока нет.</span>
+        {{ end }}
+      </div>
+    </div>
+
+    <div id="testDiv" class="mb-3" style="display:none">
+      <label class="form-label">Выберите тесты (можно несколько)</label>
+      <div class="chip-list mt-1" id="testList">
+        {{ range .tests }}
+        <label class="chip-label" data-id="{{ .ID }}" onclick="togglePick(this)"><span class="chip-dot"></span>{{ .Title }}</label>
+        {{ else }}
+        <span style="color:var(--text-muted);font-size:.8rem">Тестов пока нет.</span>
+        {{ end }}
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <label class="form-label">Кому назначить</label>
+      <label class="chip-label mb-2" id="chipAllEmp" onclick="toggleAllEmp()" style="display:inline-flex">
+        <span class="chip-dot"></span> Все сотрудники
+      </label>
+      <div class="chip-list mt-1" id="empList">
+        {{ range .employees }}
+        <label class="chip-label" data-id="{{ .ID }}" onclick="toggleEmp(this)"><span class="chip-dot"></span>{{ .Name }}</label>
+        {{ end }}
+      </div>
+    </div>
+
+    <div style="display:flex;gap:.75rem">
+      <button class="btn-primary-custom btn-green" onclick="submitAssign()"><i class="bi bi-check-lg"></i> Назначить</button>
+      <button class="btn-cancel" onclick="closeModal('assignModal')">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+// разворачивает/сворачивает список курсов или тестов + подсветка кнопки
+function toggleType(type){
+  if(type==='course'){
+    var on=document.getElementById('typeCourse').classList.toggle('selected');
+    document.getElementById('courseDiv').style.display=on?'':'none';
+    if(!on) document.querySelectorAll('#courseList .chip-label.selected').forEach(function(e){e.classList.remove('selected');});
+  } else {
+    var on2=document.getElementById('typeTest').classList.toggle('selected');
+    document.getElementById('testDiv').style.display=on2?'':'none';
+    if(!on2) document.querySelectorAll('#testList .chip-label.selected').forEach(function(e){e.classList.remove('selected');});
+  }
+}
+
+// выбор курса/теста (мультивыбор)
+function togglePick(el){ el.classList.toggle('selected'); }
+
+// выбор конкретного сотрудника
+function toggleEmp(el){
+  el.classList.toggle('selected');
+  if(el.classList.contains('selected')){
+    document.getElementById('chipAllEmp').classList.remove('selected');
+  }
+}
+
+// "Все сотрудники"
+function toggleAllEmp(){
+  var chip=document.getElementById('chipAllEmp');
+  var on=chip.classList.toggle('selected');
+  document.querySelectorAll('#empList .chip-label').forEach(function(e){e.classList.toggle('selected',on);});
+}
+
+function ids(selector){
+  return Array.prototype.map.call(document.querySelectorAll(selector), function(e){ return +e.dataset.id; });
+}
+
+function submitAssign(){
+  var courseIDs = ids('#courseList .chip-label.selected');
+  var testIDs   = ids('#testList .chip-label.selected');
+  var assignAll = document.getElementById('chipAllEmp').classList.contains('selected');
+  var userIDs   = assignAll ? [] : ids('#empList .chip-label.selected');
+
+  if(courseIDs.length===0 && testIDs.length===0){ alert('Выберите хотя бы один курс или тест.'); return; }
+  if(!assignAll && userIDs.length===0){ alert('Выберите сотрудников или нажмите «Все сотрудники».'); return; }
+
+  var reqs=[];
+  courseIDs.forEach(function(id){
+    reqs.push(fetch('/admin/assignments/assign',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({target_types:['course'],course_id:id,test_id:0,assign_all:assignAll,user_ids:userIDs})
+    }));
+  });
+  testIDs.forEach(function(id){
+    reqs.push(fetch('/admin/assignments/assign',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({target_types:['test'],course_id:0,test_id:id,assign_all:assignAll,user_ids:userIDs})
+    }));
+  });
+
+  Promise.all(reqs).then(function(results){
+    if(results.every(function(r){return r.ok;})){ closeModal('assignModal'); location.reload(); }
+    else { alert('Часть назначений не удалось создать.'); }
+  }).catch(function(){ alert('Ошибка сети при назначении.'); });
+}
+
+document.querySelectorAll('.modal-overlay').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)m.classList.remove('open');});});
+</script>
+</body></html>
+{{ end }}

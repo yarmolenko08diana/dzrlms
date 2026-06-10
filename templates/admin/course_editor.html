@@ -1,0 +1,673 @@
+{{ define "admin/course_editor.html" }}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ .title }} — CorpLMS</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f0ee;--panel:#fff;--border:#edddd8;--bsoft:#f3e6e2;--text:#2c1a17;--sub:#7a5c57;--muted:#b09590;--accent:#c9796a;--abg:rgba(201,121,106,.1);--success:#5aaa82;--sbg:rgba(90,170,130,.1);--warn:#d4943a;--wbg:rgba(212,148,58,.1);--purple:#9b7ac9;--pbg:rgba(155,122,201,.1);--canvas-w:900px;--canvas-h:540px}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;font-family:'Inter','Segoe UI',system-ui,sans-serif;font-size:.875rem;background:var(--bg);color:var(--text)}
+.topbar{height:52px;background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1rem;gap:.75rem;flex-shrink:0;box-shadow:0 1px 4px rgba(44,26,23,.05)}
+.shell{display:flex;height:calc(100vh - 52px)}
+/* Left: slide list */
+.slide-panel{width:160px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
+.slide-panel-header{padding:.6rem .75rem;border-bottom:1px solid var(--bsoft);font-size:.62rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.slide-list{flex:1;overflow-y:auto;padding:.4rem}
+.slide-thumb{background:var(--bg);border:1px solid var(--border);border-radius:6px;margin-bottom:.3rem;cursor:pointer;padding:.45rem .6rem;font-size:.75rem;color:var(--sub);transition:all .12s;position:relative;display:flex;align-items:center;justify-content:flex-start;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.slide-thumb:hover{border-color:var(--accent);color:var(--text)}
+.slide-thumb.active{border-color:var(--accent);background:var(--abg);color:var(--accent);font-weight:600}
+.slide-thumb .del-slide{position:absolute;top:50%;transform:translateY(-50%);right:5px;background:rgba(201,92,92,.15);border:none;border-radius:4px;color:#c95c5c;width:18px;height:18px;display:none;align-items:center;justify-content:center;font-size:.65rem;cursor:pointer;padding:0}
+.slide-thumb:hover .del-slide{display:flex}
+.add-slide-btn{margin:.4rem;background:none;border:1px dashed var(--border);border-radius:6px;color:var(--muted);font-size:.75rem;padding:.4rem;cursor:pointer;width:calc(100% - .8rem);transition:all .15s;font-family:inherit}
+.add-slide-btn:hover{border-color:var(--accent);color:var(--accent)}
+/* Center: canvas */
+.canvas-area{flex:1;overflow:auto;display:flex;flex-direction:column;background:#e8e0dd;align-items:center;justify-content:flex-start;padding:1.5rem}
+.canvas-meta{display:flex;gap:.6rem;width:var(--canvas-w);margin-bottom:.75rem;flex-shrink:0}
+.meta-input{background:var(--panel);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.4rem .75rem;font-size:.82rem;outline:none;font-family:inherit;transition:border-color .15s}
+.meta-input:focus{border-color:var(--accent)}
+.canvas{width:var(--canvas-w);height:var(--canvas-h);background:#fff;border-radius:10px;position:relative;box-shadow:0 4px 20px rgba(44,26,23,.12);flex-shrink:0;overflow:hidden;user-select:none}
+.canvas.drag-over{outline:2px dashed var(--accent)}
+
+.block{position:absolute;cursor:default;border:2px solid transparent;border-radius:6px;transition:border-color .1s}
+.block:hover{border-color:rgba(201,121,106,.4)}
+.block.selected{border-color:var(--accent);z-index:1000!important}
+.block .resize-handle{position:absolute;width:10px;height:10px;background:var(--accent);border-radius:2px;right:-5px;bottom:-5px;cursor:se-resize;z-index:1001}
+.block .block-del{position:absolute;top:-10px;right:-10px;width:20px;height:20px;background:#c95c5c;border:none;border-radius:50%;color:#fff;font-size:.65rem;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:1002;padding:0}
+.block.selected .block-del{display:flex}
+.block-text{width:100%;height:100%;background:transparent;color:var(--text);font-family:inherit;font-size:1rem;resize:none;outline:none;padding:4px;cursor:text;white-space:pre;overflow:hidden}
+.block-img{width:100%;height:100%;object-fit:cover;border-radius:4px;pointer-events:none}
+.block-video{width:100%;height:100%;border-radius:4px;pointer-events:none;border:none}
+.block-link{width:100%;height:100%;display:flex;align-items:center;padding:8px;text-decoration:none;color:var(--accent);font-size:.82rem;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;background:var(--abg);border-radius:4px}
+/* Right: properties panel */
+.props-panel{width:220px;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0}
+.props-section{padding:.75rem;border-bottom:1px solid var(--bsoft)}
+.props-label{font-size:.62rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:.4rem}
+.props-input{background:var(--bg);border:1px solid var(--border);border-radius:7px;color:var(--text);padding:.38rem .6rem;font-size:.8rem;width:100%;outline:none;font-family:inherit;transition:border-color .15s;margin-bottom:.35rem}
+.props-input:focus{border-color:var(--accent)}
+.btn-add-block{background:var(--bg);border:1px solid var(--border);border-radius:7px;color:var(--sub);padding:.38rem .6rem;font-size:.78rem;cursor:pointer;display:flex;align-items:center;gap:5px;width:100%;margin-bottom:.3rem;transition:all .15s;font-family:inherit}
+.btn-add-block:hover{border-color:var(--accent);color:var(--accent)}
+.btn-pub{background:var(--success);border:none;color:#fff;border-radius:8px;padding:.42rem 1rem;font-size:.82rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .18s;font-family:inherit}
+.btn-pub:hover{background:#499e72}
+.btn-save{background:var(--abg);border:1px solid var(--border);color:var(--accent);border-radius:8px;padding:.42rem .9rem;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit}
+.btn-save:hover{background:rgba(201,121,106,.18)}
+.btn-preview-btn{background:none;border:1px solid var(--border);color:var(--sub);border-radius:8px;padding:.4rem .85rem;font-size:.8rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .15s;font-family:inherit}
+.btn-preview-btn:hover{background:var(--bsoft);color:var(--text)}
+/* Publish panel */
+.pub-panel{padding:.75rem}
+.chip-list{display:flex;flex-wrap:wrap;gap:.3rem;max-height:120px;overflow-y:auto}
+.chip{display:inline-flex;align-items:center;gap:4px;background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:.22rem .6rem;font-size:.72rem;color:var(--sub);cursor:pointer;user-select:none;transition:all .14s}
+.chip:hover{background:var(--bsoft);color:var(--text)}
+.chip.sel{background:var(--sbg);border-color:var(--success);color:var(--success);font-weight:600}
+.chip-dot{width:6px;height:6px;border-radius:50%;background:transparent;transition:background .14s}
+.chip.sel .chip-dot{background:var(--success)}
+/* Preview overlay */
+.preview-overlay{display:none;position:fixed;inset:0;background:rgba(44,26,23,.5);backdrop-filter:blur(3px);z-index:9000;align-items:center;justify-content:center}
+.preview-overlay.open{display:flex}
+.preview-box{background:var(--panel);border-radius:14px;width:940px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(44,26,23,.2)}
+.preview-header{padding:1rem 1.25rem;border-bottom:1px solid var(--bsoft);display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:.95rem}
+.preview-canvas{width:var(--canvas-w);height:var(--canvas-h);position:relative;margin:1.25rem auto;background:#fff;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.toast-msg{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--success);color:#fff;padding:.6rem 1.2rem;border-radius:10px;font-size:.855rem;font-weight:600;z-index:9999;box-shadow:0 8px 25px rgba(90,170,130,.35);opacity:0;transition:opacity .3s}
+.toast-msg.show{opacity:1}
+</style>
+</head>
+<body data-course-id="{{ if .course }}{{ .course.ID }}{{ else }}0{{ end }}">
+
+<div id="course-data" data-json="{{ if .courseJSON }}{{ .courseJSON }}{{ end }}" style="display:none"></div>
+<script>{{ if .courseJSON }}window.__COURSE_DATA__ = {{ .courseJSON }};{{ else }}window.__COURSE_DATA__ = null;{{ end }}</script>
+
+<div class="topbar">
+  <a href="/admin/courses" style="color:var(--muted);text-decoration:none;font-size:.82rem;display:flex;align-items:center;gap:4px"><i class="bi bi-arrow-left"></i> Курсы</a>
+  <span style="color:var(--border)">|</span>
+  <input type="text" id="courseTitle" style="border:none;background:transparent;font-weight:700;font-size:.9rem;color:var(--text);outline:none;font-family:inherit;flex:1"
+    placeholder="Название курса…" value="{{ if .course }}{{ .course.Title }}{{ end }}" oninput="renderSlideList()">
+  <div style="display:flex;gap:.5rem;margin-left:auto;align-items:center">
+    <button class="btn-preview-btn" onclick="openPreview()"><i class="bi bi-eye"></i> Превью</button>
+    <button class="btn-save" onclick="saveCourse()"><i class="bi bi-floppy-fill"></i> Сохранить</button>
+    <button class="btn-pub" onclick="openPublishPanel()"><i class="bi bi-send-fill"></i> Опубликовать</button>
+  </div>
+</div>
+
+<div class="shell">
+  <div class="slide-panel">
+    <div class="slide-panel-header">
+      <span>Слайды</span>
+    </div>
+    <div class="slide-list" id="slideList"></div>
+    <button class="add-slide-btn" onclick="addSlide()"><i class="bi bi-plus-lg"></i> Слайд</button>
+  </div>
+
+  <div class="canvas-area">
+    <div class="canvas-meta">
+      <input type="text" class="meta-input" id="slideTitle" style="flex:1" placeholder="Название слайда…" oninput="syncSlideTitle()">
+      <input type="text" class="meta-input" id="courseDesc" style="width:200px" placeholder="Описание курса…"
+        value="{{ if .course }}{{ .course.Description }}{{ end }}">
+      <input type="text" class="meta-input" id="courseDur" style="width:110px" placeholder="Длительность"
+        value="{{ if .course }}{{ .course.Duration }}{{ end }}">
+    </div>
+    <div class="canvas" id="canvas"
+         ondragover="event.preventDefault();this.classList.add('drag-over')"
+         ondragleave="this.classList.remove('drag-over')"
+         ondrop="handleDrop(event)">
+    </div>
+  </div>
+
+  <div class="props-panel">
+    <div class="props-section">
+      <div class="props-label">Добавить элемент</div>
+      <button class="btn-add-block" onclick="addBlock('text')"><i class="bi bi-text-left" style="color:var(--accent)"></i> Текст</button>
+      <button class="btn-add-block" onclick="triggerUpload('image')"><i class="bi bi-image" style="color:var(--purple)"></i> Изображение</button>
+      <button class="btn-add-block" onclick="triggerUpload('video')"><i class="bi bi-camera-video" style="color:var(--warn)"></i> Видео (файл)</button>
+      <button class="btn-add-block" onclick="addBlock('video')"><i class="bi bi-play-btn" style="color:var(--warn)"></i> Видео (ссылка)</button>
+      <button class="btn-add-block" onclick="addBlock('link')"><i class="bi bi-link-45deg" style="color:var(--success)"></i> Ссылка</button>
+      <input type="file" id="imgUploadInput" accept="image/*,video/*" style="display:none" onchange="uploadFile(this)">
+    </div>
+    <div class="props-section" id="blockProps" style="display:none">
+      <div class="props-label">Свойства элемента</div>
+      <div class="props-label" style="margin-top:.5rem">X</div>
+      <input type="number" class="props-input" id="propX" oninput="updateSelectedProp('x',+this.value)">
+      <div class="props-label">Y</div>
+      <input type="number" class="props-input" id="propY" oninput="updateSelectedProp('y',+this.value)">
+      <div class="props-label">Ширина</div>
+      <input type="number" class="props-input" id="propW" oninput="updateSelectedProp('w',+this.value)">
+      <div class="props-label">Высота</div>
+      <input type="number" class="props-input" id="propH" oninput="updateSelectedProp('h',+this.value)">
+      <div id="fontSizeRow" style="display:none">
+        <div class="props-label" style="margin-top:.5rem">Размер шрифта (px)</div>
+        <input type="number" class="props-input" id="propFontSize" min="8" max="200" oninput="updateSelectedProp('fontSize',+this.value)">
+      </div>
+      <div id="contentRow" style="display:none">
+        <div class="props-label" style="margin-top:.5rem">Ссылка / URL</div>
+        <input type="text" class="props-input" id="propContent" placeholder="https://…" onchange="updateContentProp(this.value)">
+      </div>
+    </div>
+    <div class="pub-panel" id="publishPanel" style="display:none">
+      <div class="props-label">Назначить при публикации</div>
+      <label class="chip mb-2" id="chipAll" onclick="toggleChipAll(this)" style="display:inline-flex;margin-bottom:.5rem">
+        <span class="chip-dot"></span> Все сотрудники
+      </label>
+      <div class="chip-list" id="pubEmpList">
+        {{ range .employees }}
+        <div class="chip" data-uid="{{ .ID }}" onclick="this.classList.toggle('sel');updateChipDot(this)">
+          <span class="chip-dot"></span>{{ .Name }}
+        </div>
+        {{ end }}
+      </div>
+      <button class="btn-pub" style="margin-top:.75rem;width:100%;justify-content:center" onclick="doPublish()">
+        <i class="bi bi-send-fill"></i> Опубликовать курс
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="preview-overlay" id="previewOverlay">
+  <div class="preview-box">
+    <div class="preview-header">
+      <span><i class="bi bi-eye me-2" style="color:var(--accent)"></i>Предпросмотр — вид сотрудника</span>
+      <button onclick="closePreview()" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div id="previewContent" style="padding:1rem"></div>
+  </div>
+</div>
+
+<div class="toast-msg" id="toast"></div>
+
+<script>
+var courseID  = Number(document.body.dataset.courseId || 0);
+var slides    = [];
+var activeIdx = 0;
+var selBlock  = null;
+
+// Размер холста. Высоту можно менять — холст тянется вниз и прокручивается.
+var CANVAS_W = 900;
+var CANVAS_H = 1600;
+document.documentElement.style.setProperty('--canvas-w', CANVAS_W+'px');
+document.documentElement.style.setProperty('--canvas-h', CANVAS_H+'px');
+
+(function(){
+  var raw = null;
+  // 1) основной способ — JS-переменная из шаблона
+  if (window.__COURSE_DATA__) {
+    if (typeof window.__COURSE_DATA__ === 'string') {
+      try { raw = JSON.parse(window.__COURSE_DATA__); } catch(e){ console.error('course data parse error', e); }
+    } else {
+      raw = window.__COURSE_DATA__;
+    }
+  }
+  // 2) запасной способ — data-атрибут
+  if (!raw) {
+    const dataEl = document.getElementById("course-data");
+    if (dataEl) {
+      var jsonStr = (dataEl.dataset.json || dataEl.textContent || '').trim();
+      if (jsonStr) { try { raw = JSON.parse(jsonStr); } catch(e){ console.error('course-data parse error', e); } }
+    }
+  }
+  if (raw && raw.slides) {
+    slides = raw.slides.map(function(s){
+      return {
+        id: s.id || 0,
+        title: s.title || '',
+        blocks: (s.blocks || []).map(function(b){
+          return {
+            id: b.id || 0,
+            type: b.type,
+            content: b.content || '',
+            x: b.x || 0,
+            y: b.y || 0,
+            w: b.w || 300,
+            h: b.h || 80,
+            z_index: b.z_index || 0,
+            fontSize: b.font_size || 16
+          };
+        })
+      };
+    });
+  }
+})();
+
+if (!slides.length) slides.push({id:0,title:'',blocks:[]});
+
+function render() {
+  renderSlideList();
+  renderCanvas();
+  renderProps();
+}
+
+function renderSlideList() {
+  var ul = document.getElementById('slideList');
+  ul.innerHTML = '';
+  slides.forEach(function(s,i){
+    var div = document.createElement('div');
+    div.className = 'slide-thumb' + (i===activeIdx?' active':'');
+    div.innerHTML = '<span style="pointer-events:none">'+(s.title || (document.getElementById('courseTitle').value.trim() || 'Без названия'))+'</span>'
+      +'<button class="del-slide" onclick="event.stopPropagation();deleteSlide('+i+')"><i class="bi bi-x"></i></button>';
+    div.onclick = function(){ activeIdx=i; selBlock=null; render(); };
+    ul.appendChild(div);
+  });
+}
+
+function renderCanvas() {
+  var cv = document.getElementById('canvas');
+  cv.innerHTML = '';
+  var s = slides[activeIdx];
+  document.getElementById('slideTitle').value = s.title||'';
+  s.blocks.forEach(function(b,bi){
+    var el = makeBlockEl(b, bi);
+    cv.appendChild(el);
+    if (b.type==='text') fitTextBlock(el, b);   // рамка сразу обтягивает текст
+  });
+  cv.onclick = function(e){ if(e.target===cv){ selBlock=null; renderProps(); deselectAll(); }};
+}
+
+function makeBlockEl(b, bi) {
+  var el = document.createElement('div');
+  el.className = 'block';
+  el.style.cssText='left:'+b.x+'px;top:'+b.y+'px;width:'+b.w+'px;height:'+b.h+'px;z-index:'+(b.z_index||1);
+  el.dataset.bi = bi;
+
+  var inner;
+  if (b.type==='text') {
+    inner = document.createElement('textarea');
+    inner.className = 'block-text';
+    inner.value = b.content;
+    inner.wrap = 'off';
+    inner.readOnly = true;                 // по умолчанию не редактируется -> блок можно двигать за любую точку
+    inner.style.pointerEvents = 'none';
+    inner.style.whiteSpace = 'pre';
+    inner.style.overflow = 'hidden';
+    if (b.fontSize && b.fontSize > 0) inner.style.fontSize = b.fontSize + 'px';
+    inner.oninput = function(){
+      var blk = slides[activeIdx].blocks[bi];
+      blk.content = this.value;
+      fitTextBlock(el, blk);               // на вводе рамка подстраивается под текст
+      updatePropsInputs(blk);
+    };
+    inner.onfocus = function(){ selectBlock(bi); };
+    inner.onblur = function(){
+      this.readOnly = true;
+      this.style.pointerEvents = 'none';
+    };
+  } else if (b.type==='image') {
+    inner = document.createElement('img');
+    inner.className = 'block-img';
+    inner.src = b.content;
+  } else if (b.type==='video') {
+    var ytm = (b.content||'').match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    if (ytm) {
+      inner = document.createElement('iframe');
+      inner.className = 'block-video';
+      inner.src = 'https://www.youtube.com/embed/'+ytm[1];
+      inner.allowFullscreen = true;
+    } else if (b.content && /^(https?:|\/|blob:|data:)/.test(b.content)) {
+      inner = document.createElement('video');
+      inner.className = 'block-video';
+      inner.src = b.content;
+      inner.controls = true;
+    } else {
+      inner = document.createElement('div');
+      inner.className = 'block-video';
+      inner.style.cssText += 'display:flex;align-items:center;justify-content:center;background:var(--bsoft);color:var(--muted);font-size:.78rem;text-align:center;padding:8px';
+      inner.textContent = 'Вставьте ссылку справа или загрузите видео-файл';
+    }
+  } else {
+    inner = document.createElement('a');
+    inner.className = 'block-link';
+    inner.href = b.content || '#';
+    inner.textContent = b.content || 'Ссылка';
+    inner.onclick = function(e){ e.preventDefault(); };   // в редакторе не переходим по ссылке
+  }
+
+  var delBtn = document.createElement('button');
+  delBtn.className = 'block-del';
+  delBtn.innerHTML = '<i class="bi bi-x"></i>';
+  delBtn.onclick = function(e){ e.stopPropagation(); deleteBlock(bi); };
+
+  var rh = document.createElement('div');
+  rh.className = 'resize-handle';
+
+  el.appendChild(inner);
+  el.appendChild(delBtn);
+  el.appendChild(rh);
+
+  el.onmousedown = function(e){
+    if (e.target===rh || e.target.tagName==='TEXTAREA' || e.target.tagName==='BUTTON') return;
+    selectBlock(bi);
+    startDrag(e, el, bi);
+  };
+
+  rh.onmousedown = function(e){
+    e.stopPropagation();
+    startResize(e, el, bi);
+  };
+
+  // Двойной клик по текстовому блоку -> режим редактирования (как в Canva)
+  el.ondblclick = function(){
+    if (b.type !== 'text') return;
+    inner.readOnly = false;
+    inner.style.pointerEvents = 'auto';
+    inner.focus();
+  };
+
+  return el;
+}
+
+// Подгоняет рамку текстового блока точно под содержимое
+function fitTextBlock(el, b){
+  var ta = el.querySelector('textarea');
+  if(!ta) return;
+  ta.style.fontSize = (b.fontSize||16)+'px';
+  ta.style.width = '0px';
+  ta.style.height = '0px';
+  var w = ta.scrollWidth;
+  var h = ta.scrollHeight;
+  ta.style.width = '100%';
+  ta.style.height = '100%';
+  b.w = Math.max(40, w + 8);
+  b.h = Math.max(28, h + 4);
+  el.style.width = b.w + 'px';
+  el.style.height = b.h + 'px';
+}
+
+function deselectAll(){
+  document.querySelectorAll('.block.selected').forEach(function(b){b.classList.remove('selected');});
+}
+
+function selectBlock(bi){
+  deselectAll();
+  selBlock = {slideIdx:activeIdx, blockIdx:bi};
+  var el = document.querySelector('.block[data-bi="'+bi+'"]');
+  if (el) el.classList.add('selected');
+  renderProps();
+}
+
+function startDrag(e, el, bi){
+  e.preventDefault();
+  var startX = e.clientX - el.offsetLeft;
+  var startY = e.clientY - el.offsetTop;
+  function onMove(me){
+    var nx = Math.max(0, Math.min(me.clientX-startX, CANVAS_W-slides[activeIdx].blocks[bi].w));
+    var ny = Math.max(0, Math.min(me.clientY-startY, CANVAS_H-slides[activeIdx].blocks[bi].h));
+    slides[activeIdx].blocks[bi].x = nx;
+    slides[activeIdx].blocks[bi].y = ny;
+    el.style.left=nx+'px'; el.style.top=ny+'px';
+    updatePropsInputs(slides[activeIdx].blocks[bi]);
+  }
+  function onUp(){ document.removeEventListener('mousemove',onMove); document.removeEventListener('mouseup',onUp); }
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('mouseup',onUp);
+}
+
+function startResize(e, el, bi){
+  e.preventDefault();
+  var block = slides[activeIdx].blocks[bi];
+  var startX = e.clientX;
+  var startY = e.clientY;
+  var startW = block.w;
+  var startH = block.h;
+  var startFontSize = block.fontSize || 16;
+
+  // Текст: угол масштабирует ТОЛЬКО шрифт, рамка сама обтягивает текст (как в Canva)
+  if (block.type === 'text') {
+    function onMoveText(me){
+      var delta = ((me.clientX - startX) + (me.clientY - startY)) / 2;
+      var scale = (startW + delta) / startW;
+      if (scale < 0.1) scale = 0.1;
+      block.fontSize = Math.max(8, Math.round(startFontSize * scale));
+      fitTextBlock(el, block);
+      updatePropsInputs(block);
+    }
+    function onUpText(){
+      document.removeEventListener('mousemove', onMoveText);
+      document.removeEventListener('mouseup', onUpText);
+    }
+    document.addEventListener('mousemove', onMoveText);
+    document.addEventListener('mouseup', onUpText);
+    return;
+  }
+
+  // Остальные блоки — обычное изменение размера
+  function onMove(me){
+    var nw = Math.max(60, startW + (me.clientX - startX));
+    var nh = Math.max(30, startH + (me.clientY - startY));
+    block.w = nw;
+    block.h = nh;
+    el.style.width = nw + 'px';
+    el.style.height = nh + 'px';
+    updatePropsInputs(block);
+  }
+  function onUp(){
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+  }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+function renderProps(){
+  var p=document.getElementById('blockProps');
+  if(!selBlock){p.style.display='none';return;}
+  p.style.display='';
+  updatePropsInputs(slides[selBlock.slideIdx].blocks[selBlock.blockIdx]);
+}
+
+function updatePropsInputs(b){
+  document.getElementById('propX').value=Math.round(b.x);
+  document.getElementById('propY').value=Math.round(b.y);
+  document.getElementById('propW').value=Math.round(b.w);
+  document.getElementById('propH').value=Math.round(b.h);
+  var fsRow=document.getElementById('fontSizeRow');
+  if(b.type==='text'){
+    fsRow.style.display='';
+    document.getElementById('propFontSize').value=b.fontSize||16;
+  } else {
+    fsRow.style.display='none';
+  }
+  var cRow=document.getElementById('contentRow');
+  if(b.type==='link' || b.type==='video'){
+    cRow.style.display='';
+    document.getElementById('propContent').value=b.content||'';
+  } else {
+    cRow.style.display='none';
+  }
+}
+
+function updateContentProp(val){
+  if(!selBlock)return;
+  var b=slides[selBlock.slideIdx].blocks[selBlock.blockIdx];
+  b.content=val.trim();
+  var bi=selBlock.blockIdx;
+  var el=document.querySelector('.block[data-bi="'+bi+'"]');
+  if(!el)return;
+  var fresh=makeBlockEl(b,bi);   // пересобираем блок, чтобы видео/ссылка обновились
+  el.replaceWith(fresh);
+  selectBlock(bi);
+}
+
+function updateSelectedProp(prop,val){
+  if(!selBlock)return;
+  var b=slides[selBlock.slideIdx].blocks[selBlock.blockIdx];
+  b[prop]=val;
+  var el=document.querySelector('.block[data-bi="'+selBlock.blockIdx+'"]');
+  if(!el)return;
+  if(prop==='x')el.style.left=val+'px';
+  else if(prop==='y')el.style.top=val+'px';
+  else if(prop==='w')el.style.width=val+'px';
+  else if(prop==='h')el.style.height=val+'px';
+  else if(prop==='fontSize'){
+    var ta=el.querySelector('textarea');
+    if(ta) ta.style.fontSize=val+'px';
+  }
+  // для текста рамка всегда подгоняется под содержимое
+  if(b.type==='text'){
+    fitTextBlock(el,b);
+    updatePropsInputs(b);
+  }
+}
+
+function addSlide(){
+  slides.push({id:0,title:'',blocks:[]});
+  activeIdx=slides.length-1;
+  selBlock=null;
+  render();
+}
+
+function deleteSlide(i){
+  if(slides.length<=1){alert('Должен быть хотя бы один слайд.');return;}
+  if(!confirm('Удалить слайд?'))return;
+  slides.splice(i,1);
+  if(activeIdx>=slides.length)activeIdx=slides.length-1;
+  selBlock=null;
+  render();
+}
+
+function syncSlideTitle(){
+  slides[activeIdx].title=document.getElementById('slideTitle').value;
+  renderSlideList();
+}
+
+function addBlock(type){
+  var defaults={text:{w:300,h:80},image:{w:400,h:250},video:{w:480,h:270},link:{w:320,h:44}};
+  var d=defaults[type]||{w:300,h:80};
+  var content = type==='link'?'https://':'';
+  var fontSize = type==='text' ? 16 : 0;
+  slides[activeIdx].blocks.push({id:0,type:type,content:content,x:60,y:60,w:d.w,h:d.h,z_index:slides[activeIdx].blocks.length+1,fontSize:fontSize});
+  render();
+  var newIdx = slides[activeIdx].blocks.length-1;
+  selectBlock(newIdx);
+  // новый текстовый блок сразу в режиме ввода
+  if(type==='text'){
+    var el=document.querySelector('.block[data-bi="'+newIdx+'"]');
+    if(el){var ta=el.querySelector('textarea'); if(ta){ta.readOnly=false;ta.style.pointerEvents='auto';ta.focus();}}
+  }
+}
+
+function deleteBlock(bi){
+  slides[activeIdx].blocks.splice(bi,1);
+  selBlock=null;
+  render();
+}
+
+function triggerUpload(type){ document.getElementById('imgUploadInput').dataset.blockType=type; document.getElementById('imgUploadInput').click(); }
+
+function uploadFile(input){
+  var file=input.files[0]; if(!file)return;
+  var fd=new FormData(); fd.append('file',file);
+  fetch('/admin/courses/upload',{method:'POST',body:fd})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.url){
+        var type=input.dataset.blockType||'image';
+        if(file.type.indexOf('video')===0) type='video';   // загрузили видео-файл
+        var dim = type==='video' ? {w:480,h:270} : {w:400,h:250};
+        slides[activeIdx].blocks.push({id:0,type:type,content:d.url,x:60,y:60,w:dim.w,h:dim.h,z_index:slides[activeIdx].blocks.length+1,fontSize:0});
+        render();
+        selectBlock(slides[activeIdx].blocks.length-1);
+      }
+    });
+  input.value='';
+}
+
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('canvas').classList.remove('drag-over');
+  var file=e.dataTransfer.files[0]; if(!file||!file.type.startsWith('image'))return;
+  var cv=document.getElementById('canvas');
+  var r=cv.getBoundingClientRect();
+  var x=e.clientX-r.left, y=e.clientY-r.top;
+  var fd=new FormData(); fd.append('file',file);
+  fetch('/admin/courses/upload',{method:'POST',body:fd})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.url){
+        slides[activeIdx].blocks.push({id:0,type:'image',content:d.url,x:x,y:y,w:200,h:150,z_index:slides[activeIdx].blocks.length+1,fontSize:0});
+        render();
+      }
+    });
+}
+
+async function saveCourse(){
+  var title=document.getElementById('courseTitle').value.trim();
+  if(!title){alert('Введите название курса.');return;}
+  var url = courseID>0 ? '/admin/courses/'+courseID+'/save' : '/admin/courses/save';
+  var payload={
+    title:title,
+    description:document.getElementById('courseDesc').value.trim(),
+    duration:document.getElementById('courseDur').value.trim(),
+    slides:slides.map(function(s,i){
+      return{id:s.id||0,title:s.title,order_index:i,blocks:s.blocks.map(function(b,bi){
+        return{id:b.id||0,type:b.type,content:b.content,x:b.x,y:b.y,w:b.w,h:b.h, font_size:b.fontSize || 16,z_index:bi+1};
+      })};
+    })
+  };
+  var resp=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  var data=await resp.json();
+  if(data.id){courseID=data.id;history.replaceState(null,'','/admin/courses/'+courseID+'/edit');}
+  showToast('Курс сохранён');
+}
+
+function openPublishPanel(){
+  var pp=document.getElementById('publishPanel');
+  pp.style.display=pp.style.display==='none'?'':'none';
+}
+
+function toggleChipAll(chip){
+  chip.classList.toggle('sel');
+  var on=chip.classList.contains('sel');
+  document.querySelectorAll('#pubEmpList .chip').forEach(function(c){
+    if(on)c.classList.add('sel');else c.classList.remove('sel');
+    updateChipDot(c);
+  });
+  updateChipDot(chip);
+}
+
+function updateChipDot(chip){ chip.querySelector('.chip-dot').style.background=chip.classList.contains('sel')?'var(--success)':'transparent'; }
+
+async function doPublish(){
+  if(!courseID){await saveCourse();}
+  var assignAll=document.getElementById('chipAll').classList.contains('sel');
+  var userIDs=[];
+  if(!assignAll) document.querySelectorAll('#pubEmpList .chip.sel').forEach(function(c){userIDs.push(+c.dataset.uid);});
+  var resp=await fetch('/admin/courses/'+courseID+'/publish',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({assign_all:assignAll,user_ids:userIDs})
+  });
+  if(resp.ok){showToast('Курс опубликован! Назначения созданы.');setTimeout(function(){window.location='/admin/dashboard';},1500);}
+}
+
+function openPreview(){
+  var html='';
+  slides.forEach(function(s,i){
+    html+='<div style="margin-bottom:1rem"><p style="font-size:.7rem;text-transform:uppercase;color:var(--muted);font-weight:700;letter-spacing:1px">'+escH(s.title || document.getElementById('courseTitle').value.trim())+'</p>';
+    html+='<div style="width:'+CANVAS_W+'px;height:'+CANVAS_H+'px;position:relative;background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:0 auto">';
+    s.blocks.forEach(function(b){
+      html+='<div style="position:absolute;left:'+b.x+'px;top:'+b.y+'px;width:'+b.w+'px;height:'+b.h+'px">';
+      if(b.type==='text') html+='<p style="margin:0;font-size:'+(b.fontSize || 16)+'px;color:var(--text);white-space:pre">'+escH(b.content)+'</p>';
+      else if(b.type==='image') html+='<img src="'+escA(b.content)+'" style="width:100%;height:100%;object-fit:cover;border-radius:4px">';
+      else if(b.type==='video'){
+        var yt=(b.content||'').match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+        if(yt) html+='<iframe src="https://www.youtube.com/embed/'+yt[1]+'" style="width:100%;height:100%;border:none;border-radius:4px" allowfullscreen></iframe>';
+        else if(b.content) html+='<video src="'+escA(b.content)+'" controls style="width:100%;height:100%;border-radius:4px"></video>';
+      } else html+='<a href="'+escA(b.content)+'" style="display:flex;align-items:center;color:var(--accent);font-size:.85rem;background:var(--abg);padding:8px;border-radius:4px;height:100%;text-overflow:ellipsis;overflow:hidden;white-space:nowrap" target="_blank"><i class="bi bi-box-arrow-up-right me-1"></i>'+escH(b.content)+'</a>';
+      html+='</div>';
+    });
+    html+='</div></div>';
+  });
+  document.getElementById('previewContent').innerHTML=html;
+  document.getElementById('previewOverlay').classList.add('open');
+}
+
+function closePreview(){ document.getElementById('previewOverlay').classList.remove('open'); }
+document.getElementById('previewOverlay').addEventListener('click',function(e){if(e.target===this)closePreview();});
+
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function escA(s){return String(s).replace(/"/g,'&quot;');}
+function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2800);}
+
+render();
+</script>
+</body>
+</html>
+{{ end }}

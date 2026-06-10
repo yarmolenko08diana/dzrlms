@@ -1,0 +1,98 @@
+{{ define "employee/test_view.html" }}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ .title }} — CorpLMS</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f0ee;--panel:#fff;--border:#edddd8;--text:#2c1a17;--sub:#7a5c57;--muted:#b09590;--accent:#c9796a;--abg:rgba(201,121,106,.1);--success:#5aaa82;--sbg:rgba(90,170,130,.1);--warn:#d4943a;--purple:#9b7ac9}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',system-ui,sans-serif;min-height:100vh}
+.topbar{background:var(--panel);border-bottom:1px solid var(--border);padding:0 2rem;height:56px;display:flex;align-items:center;gap:1rem;box-shadow:0 1px 4px rgba(44,26,23,.05)}
+.content{max-width:700px;margin:2rem auto;padding:0 1rem}
+.q-card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:1.75rem;box-shadow:0 1px 8px rgba(44,26,23,.06)}
+.q-meta{font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:1rem}
+.q-text{font-size:1.05rem;font-weight:600;color:var(--text);margin-bottom:1.5rem;line-height:1.55}
+.answer-opt{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s;margin-bottom:.5rem;background:var(--panel)}
+.answer-opt:hover{border-color:var(--accent);background:var(--abg)}
+.answer-opt input[type=radio]{display:none}
+.answer-opt.chosen{border-color:var(--accent);background:var(--abg)}
+.answer-dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;transition:all .15s}
+.answer-opt.chosen .answer-dot{background:var(--accent);border-color:var(--accent)}
+.progress-wrap{background:var(--border);border-radius:10px;height:6px;margin-bottom:2rem;overflow:hidden}
+.progress-fill{background:linear-gradient(90deg,var(--accent),var(--purple));height:100%;transition:width .4s;border-radius:10px}
+.btn-submit{background:var(--accent);border:none;color:#fff;border-radius:10px;padding:.65rem 1.75rem;font-size:.9rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .18s;margin-top:1.25rem}
+.btn-submit:hover{background:#b86a5c}
+.btn-submit:disabled{opacity:.5;cursor:not-allowed}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="/employee/dashboard" style="color:var(--muted);text-decoration:none;font-size:.82rem;display:flex;align-items:center;gap:4px"><i class="bi bi-arrow-left"></i> Дашборд</a>
+  <span style="color:var(--border)">|</span>
+  <span style="font-weight:700;color:var(--text);flex:1">{{ .test.Title }}</span>
+</div>
+<div class="content">
+  <div class="progress-wrap">
+    <div class="progress-fill" style="width:{{ mul (inc .currentIdx) (div 100 .totalCount) }}%"></div>
+  </div>
+  <p style="font-size:.78rem;color:var(--muted);margin-bottom:1.25rem;font-weight:500">Вопрос {{ inc .currentIdx }} из {{ .totalCount }}</p>
+
+  <div class="q-card">
+    <div class="q-meta">Вопрос {{ inc .currentIdx }}</div>
+    <div class="q-text">{{ .question.Content }}</div>
+
+    {{ if .question.MediaURL }}
+    <img src="{{ .question.MediaURL }}" style="max-width:100%;border-radius:10px;margin-bottom:1.25rem">
+    {{ end }}
+
+    <form method="POST" action="/employee/tests/{{ .test.ID }}/submit" id="answerForm">
+      <input type="hidden" name="question_id" value="{{ .question.ID }}">
+      <input type="hidden" name="answer_id" id="hiddenAnswerID" value="">
+      <input type="hidden" name="next_idx" value="{{ if .isLast }}{{ .currentIdx }}{{ else }}{{ inc .currentIdx }}{{ end }}">
+      {{ range .question.Answers }}
+      <div class="answer-opt" onclick="selectAnswer(this, '{{ .ID }}', '{{ .IsCorrect }}')">
+        <div class="answer-dot"></div>
+        <span>{{ .Content }}</span>
+        <input type="radio" name="answer_id" value="{{ .ID }}">
+      </div>
+      {{ end }}
+      <button type="submit" class="btn-submit" id="submitBtn" disabled>
+        {{ if .isLast }}Завершить тест{{ else }}Следующий вопрос{{ end }}
+      </button>
+    </form>
+
+    {{ if .isLast }}
+    <p style="color:var(--muted);font-size:.8rem;margin-top:1rem;text-align:center">
+      Это последний вопрос. После отправки тест будет завершён.
+    </p>
+    {{ end }}
+  </div>
+</div>
+
+<script>
+var selectedIsCorrect = false;
+function selectAnswer(el, answerId, isCorrect){
+  document.querySelectorAll('.answer-opt').forEach(function(a){a.classList.remove('chosen');});
+  el.classList.add('chosen');
+  document.getElementById('hiddenAnswerID').value = answerId;
+  selectedIsCorrect = isCorrect === 'true';
+  document.getElementById('submitBtn').disabled = false;
+}
+document.getElementById('answerForm').addEventListener('submit', function(e){
+  var form = e.target;
+  var ic = document.createElement('input');
+  ic.type='hidden'; ic.name='is_correct'; ic.value=selectedIsCorrect?'true':'false';
+  form.appendChild(ic);
+  {{ if .isLast }}
+  // Last question - complete test after submit
+  fetch('/employee/tests/{{ .test.ID }}/complete', {method:'POST'});
+  {{ end }}
+});
+</script>
+</body>
+</html>
+{{ end }}

@@ -1,0 +1,8 @@
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+/static/uploads/*
+!/static/uploads/.gitkeep
