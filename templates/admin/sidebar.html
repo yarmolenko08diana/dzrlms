@@ -2,11 +2,11 @@
 <aside class="sidebar">
   <div class="sidebar-brand">
     <div class="brand-icon"><i class="bi bi-mortarboard-fill"></i></div>
-    <div><div class="brand-text">CorpLMS</div><div class="brand-role">Администратор</div></div>
+    <div><div class="brand-text">dzrLMS</div><div class="brand-role">Администратор</div></div>
   </div>
   <nav class="sidebar-nav">
     <div class="nav-section">Главное</div>
-    <div class="nav-item"><a href="/admin/dashboard" class="{{ if eq .active "dashboard" }}active{{ end }}"><i class="bi bi-grid-fill"></i> Дашборд</a></div>
+    <div class="nav-item"><a href="/admin/dashboard" class="{{ if eq .active "dashboard" }}active{{ end }}"><i class="bi bi-grid-fill"></i> Аналитика</a></div>
     <div class="nav-section">Контент</div>
     <div class="nav-item"><a href="/admin/courses" class="{{ if eq .active "courses" }}active{{ end }}"><i class="bi bi-easel2-fill"></i> Курсы</a></div>
     <div class="nav-item"><a href="/admin/tests" class="{{ if eq .active "tests" }}active{{ end }}"><i class="bi bi-ui-checks"></i> Тесты</a></div>
@@ -16,7 +16,6 @@
   </nav>
   <div class="sidebar-footer">
     <div class="user-info">
-      <div class="avatar">{{ slice (.userName | printf "%s") 0 1 }}</div>
       <div><div class="user-name">{{ .userName }}</div><div class="user-role">Администратор</div></div>
     </div>
     <a href="/logout" class="btn-logout"><i class="bi bi-box-arrow-left"></i> Выход</a>

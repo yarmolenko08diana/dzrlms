@@ -39,3 +39,7 @@ func (s *NotificationService) ForUser(userID uint) ([]models.Notification, error
 func (s *NotificationService) MarkRead(id uint) error {
 	return s.repo.MarkRead(id)
 }
+
+func (s *NotificationService) MarkAllRead(userID uint) error {
+	return s.repo.MarkAllReadForUser(userID)
+}

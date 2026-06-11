@@ -3,7 +3,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ .title }} — CorpLMS</title>
+<title>{{ .title }} — dzrLMS</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -24,7 +24,7 @@ html,body{margin:0;height:100%;overflow:hidden;font-family:'Inter','Segoe UI',sy
 .slide-thumb:hover .del-slide{display:flex}
 .add-slide-btn{margin:.4rem;background:none;border:1px dashed var(--border);border-radius:6px;color:var(--muted);font-size:.75rem;padding:.4rem;cursor:pointer;width:calc(100% - .8rem);transition:all .15s;font-family:inherit}
 .add-slide-btn:hover{border-color:var(--accent);color:var(--accent)}
-/* Center: canvas */
+
 .canvas-area{flex:1;overflow:auto;display:flex;flex-direction:column;background:#e8e0dd;align-items:center;justify-content:flex-start;padding:1.5rem}
 .canvas-meta{display:flex;gap:.6rem;width:var(--canvas-w);margin-bottom:.75rem;flex-shrink:0}
 .meta-input{background:var(--panel);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.4rem .75rem;font-size:.82rem;outline:none;font-family:inherit;transition:border-color .15s}
@@ -42,7 +42,7 @@ html,body{margin:0;height:100%;overflow:hidden;font-family:'Inter','Segoe UI',sy
 .block-img{width:100%;height:100%;object-fit:cover;border-radius:4px;pointer-events:none}
 .block-video{width:100%;height:100%;border-radius:4px;pointer-events:none;border:none}
 .block-link{width:100%;height:100%;display:flex;align-items:center;padding:8px;text-decoration:none;color:var(--accent);font-size:.82rem;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;background:var(--abg);border-radius:4px}
-/* Right: properties panel */
+
 .props-panel{width:220px;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0}
 .props-section{padding:.75rem;border-bottom:1px solid var(--bsoft)}
 .props-label{font-size:.62rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:.4rem}
@@ -52,11 +52,9 @@ html,body{margin:0;height:100%;overflow:hidden;font-family:'Inter','Segoe UI',sy
 .btn-add-block:hover{border-color:var(--accent);color:var(--accent)}
 .btn-pub{background:var(--success);border:none;color:#fff;border-radius:8px;padding:.42rem 1rem;font-size:.82rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .18s;font-family:inherit}
 .btn-pub:hover{background:#499e72}
-.btn-save{background:var(--abg);border:1px solid var(--border);color:var(--accent);border-radius:8px;padding:.42rem .9rem;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit}
-.btn-save:hover{background:rgba(201,121,106,.18)}
 .btn-preview-btn{background:none;border:1px solid var(--border);color:var(--sub);border-radius:8px;padding:.4rem .85rem;font-size:.8rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .15s;font-family:inherit}
 .btn-preview-btn:hover{background:var(--bsoft);color:var(--text)}
-/* Publish panel */
+
 .pub-panel{padding:.75rem}
 .chip-list{display:flex;flex-wrap:wrap;gap:.3rem;max-height:120px;overflow-y:auto}
 .chip{display:inline-flex;align-items:center;gap:4px;background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:.22rem .6rem;font-size:.72rem;color:var(--sub);cursor:pointer;user-select:none;transition:all .14s}
@@ -64,7 +62,7 @@ html,body{margin:0;height:100%;overflow:hidden;font-family:'Inter','Segoe UI',sy
 .chip.sel{background:var(--sbg);border-color:var(--success);color:var(--success);font-weight:600}
 .chip-dot{width:6px;height:6px;border-radius:50%;background:transparent;transition:background .14s}
 .chip.sel .chip-dot{background:var(--success)}
-/* Preview overlay */
+
 .preview-overlay{display:none;position:fixed;inset:0;background:rgba(44,26,23,.5);backdrop-filter:blur(3px);z-index:9000;align-items:center;justify-content:center}
 .preview-overlay.open{display:flex}
 .preview-box{background:var(--panel);border-radius:14px;width:940px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(44,26,23,.2)}
@@ -85,8 +83,8 @@ html,body{margin:0;height:100%;overflow:hidden;font-family:'Inter','Segoe UI',sy
   <input type="text" id="courseTitle" style="border:none;background:transparent;font-weight:700;font-size:.9rem;color:var(--text);outline:none;font-family:inherit;flex:1"
     placeholder="Название курса…" value="{{ if .course }}{{ .course.Title }}{{ end }}" oninput="renderSlideList()">
   <div style="display:flex;gap:.5rem;margin-left:auto;align-items:center">
+    <span id="saveStatus" style="font-size:.75rem;color:var(--muted)"></span>
     <button class="btn-preview-btn" onclick="openPreview()"><i class="bi bi-eye"></i> Превью</button>
-    <button class="btn-save" onclick="saveCourse()"><i class="bi bi-floppy-fill"></i> Сохранить</button>
     <button class="btn-pub" onclick="openPublishPanel()"><i class="bi bi-send-fill"></i> Опубликовать</button>
   </div>
 </div>
@@ -94,7 +92,7 @@ html,body{margin:0;height:100%;overflow:hidden;font-family:'Inter','Segoe UI',sy
 <div class="shell">
   <div class="slide-panel">
     <div class="slide-panel-header">
-      <span>Слайды</span>
+      <span>Главы</span>
     </div>
     <div class="slide-list" id="slideList"></div>
     <button class="add-slide-btn" onclick="addSlide()"><i class="bi bi-plus-lg"></i> Слайд</button>
@@ -102,8 +100,8 @@ html,body{margin:0;height:100%;overflow:hidden;font-family:'Inter','Segoe UI',sy
 
   <div class="canvas-area">
     <div class="canvas-meta">
-      <input type="text" class="meta-input" id="slideTitle" style="flex:1" placeholder="Название слайда…" oninput="syncSlideTitle()">
-      <input type="text" class="meta-input" id="courseDesc" style="width:200px" placeholder="Описание курса…"
+      <input type="text" class="meta-input" id="slideTitle" style="flex:1" placeholder="Название главы..." oninput="syncSlideTitle()">
+      <input type="text" class="meta-input" id="courseDesc" style="width:200px" placeholder="Описание главы…"
         value="{{ if .course }}{{ .course.Description }}{{ end }}">
       <input type="text" class="meta-input" id="courseDur" style="width:110px" placeholder="Длительность"
         value="{{ if .course }}{{ .course.Duration }}{{ end }}">
@@ -181,7 +179,6 @@ var slides    = [];
 var activeIdx = 0;
 var selBlock  = null;
 
-// Размер холста. Высоту можно менять — холст тянется вниз и прокручивается.
 var CANVAS_W = 900;
 var CANVAS_H = 1600;
 document.documentElement.style.setProperty('--canvas-w', CANVAS_W+'px');
@@ -197,7 +194,7 @@ document.documentElement.style.setProperty('--canvas-h', CANVAS_H+'px');
       raw = window.__COURSE_DATA__;
     }
   }
-  // 2) запасной способ — data-атрибут
+
   if (!raw) {
     const dataEl = document.getElementById("course-data");
     if (dataEl) {
@@ -274,7 +271,7 @@ function makeBlockEl(b, bi) {
     inner.className = 'block-text';
     inner.value = b.content;
     inner.wrap = 'off';
-    inner.readOnly = true;                 // по умолчанию не редактируется -> блок можно двигать за любую точку
+    inner.readOnly = true;
     inner.style.pointerEvents = 'none';
     inner.style.whiteSpace = 'pre';
     inner.style.overflow = 'hidden';
@@ -282,7 +279,7 @@ function makeBlockEl(b, bi) {
     inner.oninput = function(){
       var blk = slides[activeIdx].blocks[bi];
       blk.content = this.value;
-      fitTextBlock(el, blk);               // на вводе рамка подстраивается под текст
+      fitTextBlock(el, blk);
       updatePropsInputs(blk);
     };
     inner.onfocus = function(){ selectBlock(bi); };
@@ -317,7 +314,7 @@ function makeBlockEl(b, bi) {
     inner.className = 'block-link';
     inner.href = b.content || '#';
     inner.textContent = b.content || 'Ссылка';
-    inner.onclick = function(e){ e.preventDefault(); };   // в редакторе не переходим по ссылке
+    inner.onclick = function(e){ e.preventDefault(); };
   }
 
   var delBtn = document.createElement('button');
@@ -343,7 +340,6 @@ function makeBlockEl(b, bi) {
     startResize(e, el, bi);
   };
 
-  // Двойной клик по текстовому блоку -> режим редактирования (как в Canva)
   el.ondblclick = function(){
     if (b.type !== 'text') return;
     inner.readOnly = false;
@@ -354,7 +350,6 @@ function makeBlockEl(b, bi) {
   return el;
 }
 
-// Подгоняет рамку текстового блока точно под содержимое
 function fitTextBlock(el, b){
   var ta = el.querySelector('textarea');
   if(!ta) return;
@@ -409,7 +404,6 @@ function startResize(e, el, bi){
   var startH = block.h;
   var startFontSize = block.fontSize || 16;
 
-  // Текст: угол масштабирует ТОЛЬКО шрифт, рамка сама обтягивает текст (как в Canva)
   if (block.type === 'text') {
     function onMoveText(me){
       var delta = ((me.clientX - startX) + (me.clientY - startY)) / 2;
@@ -428,7 +422,6 @@ function startResize(e, el, bi){
     return;
   }
 
-  // Остальные блоки — обычное изменение размера
   function onMove(me){
     var nw = Math.max(60, startW + (me.clientX - startX));
     var nh = Math.max(30, startH + (me.clientY - startY));
@@ -481,7 +474,7 @@ function updateContentProp(val){
   var bi=selBlock.blockIdx;
   var el=document.querySelector('.block[data-bi="'+bi+'"]');
   if(!el)return;
-  var fresh=makeBlockEl(b,bi);   // пересобираем блок, чтобы видео/ссылка обновились
+  var fresh=makeBlockEl(b,bi);
   el.replaceWith(fresh);
   selectBlock(bi);
 }
@@ -500,7 +493,6 @@ function updateSelectedProp(prop,val){
     var ta=el.querySelector('textarea');
     if(ta) ta.style.fontSize=val+'px';
   }
-  // для текста рамка всегда подгоняется под содержимое
   if(b.type==='text'){
     fitTextBlock(el,b);
     updatePropsInputs(b);
@@ -588,9 +580,15 @@ function handleDrop(e){
     });
 }
 
-async function saveCourse(){
+var saveInFlight = false;
+
+async function saveCourse(opts){
+  opts = opts || {};
   var title=document.getElementById('courseTitle').value.trim();
-  if(!title){alert('Введите название курса.');return;}
+  if(!title){
+    if(!opts.silent) alert('Введите название курса.');
+    return false;
+  }
   var url = courseID>0 ? '/admin/courses/'+courseID+'/save' : '/admin/courses/save';
   var payload={
     title:title,
@@ -602,15 +600,41 @@ async function saveCourse(){
       })};
     })
   };
-  var resp=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-  var data=await resp.json();
-  if(data.id){courseID=data.id;history.replaceState(null,'','/admin/courses/'+courseID+'/edit');}
-  showToast('Курс сохранён');
+  saveInFlight = true;
+  try {
+    var resp=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    var data=await resp.json();
+    if(data.id){courseID=data.id;history.replaceState(null,'','/admin/courses/'+courseID+'/edit');}
+    var status=document.getElementById('saveStatus');
+    if(status){
+      status.textContent='Сохранено';
+      setTimeout(function(){status.textContent='';},1500);
+    }
+    if(!opts.silent) showToast('Курс сохранён');
+    return true;
+  } catch(e){
+    return false;
+  } finally {
+    saveInFlight = false;
+  }
 }
+
+setInterval(function(){
+  if(!saveInFlight) saveCourse({silent:true});
+}, 4000);
 
 function openPublishPanel(){
   var pp=document.getElementById('publishPanel');
-  pp.style.display=pp.style.display==='none'?'':'none';
+  var opening = pp.style.display==='none';
+  pp.style.display=opening?'':'none';
+  if(opening){
+    var chipAll=document.getElementById('chipAll');
+    var anySel=document.querySelector('#pubEmpList .chip.sel');
+    if(!chipAll.classList.contains('sel') && !anySel){
+      chipAll.classList.add('sel');
+      updateChipDot(chipAll);
+    }
+  }
 }
 
 function toggleChipAll(chip){
@@ -626,10 +650,12 @@ function toggleChipAll(chip){
 function updateChipDot(chip){ chip.querySelector('.chip-dot').style.background=chip.classList.contains('sel')?'var(--success)':'transparent'; }
 
 async function doPublish(){
-  if(!courseID){await saveCourse();}
+  var ok=await saveCourse({silent:true});
+  if(!ok){alert('Введите название курса перед публикацией.');return;}
   var assignAll=document.getElementById('chipAll').classList.contains('sel');
   var userIDs=[];
   if(!assignAll) document.querySelectorAll('#pubEmpList .chip.sel').forEach(function(c){userIDs.push(+c.dataset.uid);});
+  if(!assignAll && userIDs.length===0){alert('Выберите сотрудников или "Все сотрудники".');return;}
   var resp=await fetch('/admin/courses/'+courseID+'/publish',{
     method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({assign_all:assignAll,user_ids:userIDs})
@@ -640,8 +666,11 @@ async function doPublish(){
 function openPreview(){
   var html='';
   slides.forEach(function(s,i){
+    var maxBottom=0;
+    s.blocks.forEach(function(b){maxBottom=Math.max(maxBottom, (b.y||0)+(b.h||0));});
+    var canvasH=maxBottom>0?(maxBottom+40):CANVAS_H;
     html+='<div style="margin-bottom:1rem"><p style="font-size:.7rem;text-transform:uppercase;color:var(--muted);font-weight:700;letter-spacing:1px">'+escH(s.title || document.getElementById('courseTitle').value.trim())+'</p>';
-    html+='<div style="width:'+CANVAS_W+'px;height:'+CANVAS_H+'px;position:relative;background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:0 auto">';
+    html+='<div style="width:'+CANVAS_W+'px;height:'+canvasH+'px;position:relative;background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:0 auto">';
     s.blocks.forEach(function(b){
       html+='<div style="position:absolute;left:'+b.x+'px;top:'+b.y+'px;width:'+b.w+'px;height:'+b.h+'px">';
       if(b.type==='text') html+='<p style="margin:0;font-size:'+(b.fontSize || 16)+'px;color:var(--text);white-space:pre">'+escH(b.content)+'</p>';

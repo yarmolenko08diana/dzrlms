@@ -7,11 +7,12 @@ import (
 )
 
 type TestService struct {
-	tests repositories.TestRepository
+	tests  repositories.TestRepository
+	upload *UploadService
 }
 
-func NewTestService(tests repositories.TestRepository) *TestService {
-	return &TestService{tests: tests}
+func NewTestService(tests repositories.TestRepository, upload *UploadService) *TestService {
+	return &TestService{tests: tests, upload: upload}
 }
 
 func (s *TestService) List() ([]models.Test, error) {
@@ -118,5 +119,13 @@ func (s *TestService) Publish(testID uint) error {
 }
 
 func (s *TestService) Delete(id uint) error {
+	if t, err := s.tests.FindWithQuestions(id); err == nil {
+		for _, q := range t.Questions {
+			s.upload.DeleteFile(q.MediaURL)
+			for _, a := range q.Answers {
+				s.upload.DeleteFile(a.MediaURL)
+			}
+		}
+	}
 	return s.tests.Delete(id)
 }

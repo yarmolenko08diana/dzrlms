@@ -27,7 +27,7 @@ func Setup(r *gin.Engine, gormDB *gorm.DB) {
 	empCtrl := controllers.NewEmployeeController(svc.Repos.Users)
 	courseCtrl := controllers.NewCourseController(svc.Courses, svc.Assignments, svc.Repos.Users, svc.Upload)
 	testCtrl := controllers.NewTestController(svc.Tests, svc.Assignments, svc.Repos.Users, svc.Upload)
-	assnCtrl := controllers.NewAssignmentController(svc.Assignments)
+	assnCtrl := controllers.NewAssignmentController(svc.Assignments, svc.Tests, svc.Courses, svc.Repos.Users)
 	dashCtrl := controllers.NewDashboardController(svc.Repos.Users, svc.Repos.Courses, svc.Repos.Tests, svc.Repos.Assignments, svc.Notif, gormDB)
 
 	r.GET("/", func(c *gin.Context) { c.Redirect(302, "/login") })
@@ -45,7 +45,6 @@ func Setup(r *gin.Engine, gormDB *gorm.DB) {
 		admin.GET("/employees/:id/edit", empCtrl.EditForm)
 		admin.POST("/employees/:id", empCtrl.Update)
 		admin.POST("/employees/:id/delete", empCtrl.Delete)
-		admin.GET("/employees/:id/profile", empCtrl.Profile)
 
 		admin.GET("/courses", courseCtrl.List)
 		admin.GET("/courses/new", courseCtrl.NewEditor)
@@ -68,15 +67,18 @@ func Setup(r *gin.Engine, gormDB *gorm.DB) {
 		admin.GET("/assignments", assnCtrl.List)
 		admin.POST("/assignments/assign", assnCtrl.Assign)
 		admin.POST("/assignments/:id/delete", assnCtrl.Delete)
+		admin.GET("/assignments/:id/results", assnCtrl.Results)
 	}
 
 	emp := r.Group("/employee", middleware.RequireAuth())
 	{
 		emp.GET("/dashboard", dashCtrl.Employee)
+		emp.POST("/notifications/read", dashCtrl.MarkNotificationsRead)
 		emp.GET("/courses/:id", courseCtrl.EmployeeView)
 		emp.POST("/courses/:id/complete", courseCtrl.CompleteCourse)
 		emp.GET("/tests/:id", testCtrl.EmployeeView)
 		emp.POST("/tests/:id/submit", testCtrl.SubmitAnswer)
 		emp.POST("/tests/:id/complete", testCtrl.CompleteTest)
+		emp.GET("/tests/:id/results", testCtrl.Results)
 	}
 }

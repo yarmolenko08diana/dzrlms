@@ -3,7 +3,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ .title }} — CorpLMS</title>
+<title>{{ .title }} — dzrLMS</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -19,7 +19,6 @@
     </button>
   </div>
 
-  <!-- Filters -->
   <div class="card mb-3" style="padding:1rem 1.25rem">
     <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap">
       <div>
@@ -76,14 +75,20 @@
     {{ if .rows }}
     <div class="table-responsive">
       <table class="table mb-0">
-        <thead><tr><th>Сотрудник</th><th>Тип</th><th>Статус</th><th>Назначен</th><th></th></tr></thead>
+        <thead><tr><th>Сотрудник</th><th>Тип</th><th>Название</th><th>Статус</th><th>Назначен</th><th></th></tr></thead>
         <tbody>
           {{ range .rows }}
           <tr>
             <td style="font-weight:600">{{ .User.Name }}</td>
             <td>
-              {{ if isCourse .TargetType }}<span class="badge badge-purple"><i class="bi bi-easel2-fill me-1"></i>Курс #{{ .TargetID }}</span>
-              {{ else if isTest .TargetType }}<span class="badge" style="background:var(--warning-bg);color:var(--warning)"><i class="bi bi-ui-checks me-1"></i>Тест #{{ .TargetID }}</span>
+              {{ if isCourse .TargetType }}<span class="badge badge-purple"><i class="bi bi-easel2-fill me-1"></i>Курс</span>
+              {{ else if isTest .TargetType }}<span class="badge" style="background:var(--warning-bg);color:var(--warning)"><i class="bi bi-ui-checks me-1"></i>Тест</span>
+              {{ end }}
+            </td>
+            <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+                title="{{ if isCourse .TargetType }}{{ index $.courseTitles .TargetID }}{{ else if isTest .TargetType }}{{ index $.testTitles .TargetID }}{{ end }}">
+              {{ if isCourse .TargetType }}{{ index $.courseTitles .TargetID }}
+              {{ else if isTest .TargetType }}{{ index $.testTitles .TargetID }}
               {{ end }}
             </td>
             <td>
@@ -94,9 +99,14 @@
             </td>
             <td style="color:var(--text-muted);font-size:.8rem">{{ formatDate .CreatedAt }}</td>
             <td>
-              <form method="POST" action="/admin/assignments/{{ .ID }}/delete" style="display:inline" onsubmit="return confirm('Удалить назначение?')">
-                <button type="submit" class="btn-sm-action btn-delete"><i class="bi bi-trash-fill"></i> Удалить</button>
-              </form>
+              <div style="display:flex;gap:5px">
+                {{ if and (isTest .TargetType) (eq .Status "completed") }}
+                <a href="/admin/assignments/{{ .ID }}/results" class="btn-sm-action btn-view"><i class="bi bi-bar-chart-fill"></i> Результаты</a>
+                {{ end }}
+                <form method="POST" action="/admin/assignments/{{ .ID }}/delete" style="display:inline" onsubmit="return confirm('Удалить назначение?')">
+                  <button type="submit" class="btn-sm-action btn-delete"><i class="bi bi-trash-fill"></i> Удалить</button>
+                </form>
+              </div>
             </td>
           </tr>
           {{ end }}
@@ -109,7 +119,6 @@
   </div>
 </main>
 
-<!-- Assign modal -->
 <div id="assignModal" class="modal-overlay">
   <div class="modal-box">
     <div class="modal-header-row">
@@ -173,7 +182,6 @@
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 
-// разворачивает/сворачивает список курсов или тестов + подсветка кнопки
 function toggleType(type){
   if(type==='course'){
     var on=document.getElementById('typeCourse').classList.toggle('selected');
@@ -186,10 +194,8 @@ function toggleType(type){
   }
 }
 
-// выбор курса/теста (мультивыбор)
 function togglePick(el){ el.classList.toggle('selected'); }
 
-// выбор конкретного сотрудника
 function toggleEmp(el){
   el.classList.toggle('selected');
   if(el.classList.contains('selected')){
@@ -197,7 +203,6 @@ function toggleEmp(el){
   }
 }
 
-// "Все сотрудники"
 function toggleAllEmp(){
   var chip=document.getElementById('chipAllEmp');
   var on=chip.classList.toggle('selected');

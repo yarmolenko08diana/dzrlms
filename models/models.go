@@ -133,6 +133,7 @@ type TestProgress struct {
 
 	Assignment       Assignment        `gorm:"foreignKey:AssignmentID;constraint:OnDelete:CASCADE" json:"assignment,omitempty"`
 	IncorrectAnswers []IncorrectAnswer `gorm:"foreignKey:TestProgressID;constraint:OnDelete:CASCADE" json:"incorrect_answers,omitempty"`
+	Answers          []TestAnswer      `gorm:"foreignKey:TestProgressID;constraint:OnDelete:CASCADE" json:"answers,omitempty"`
 }
 
 type IncorrectAnswer struct {
@@ -140,6 +141,17 @@ type IncorrectAnswer struct {
 	TestProgressID uint `gorm:"not null;index"           json:"test_progress_id"`
 	QuestionID     uint `gorm:"not null;index"           json:"question_id"`
 	AnswerID       uint `gorm:"not null;index"           json:"answer_id"`
+
+	Question Question `gorm:"foreignKey:QuestionID" json:"question,omitempty"`
+	Answer   Answer   `gorm:"foreignKey:AnswerID"   json:"answer,omitempty"`
+}
+
+type TestAnswer struct {
+	ID             uint `gorm:"primaryKey;autoIncrement" json:"id"`
+	TestProgressID uint `gorm:"not null;uniqueIndex:idx_progress_question" json:"test_progress_id"`
+	QuestionID     uint `gorm:"not null;uniqueIndex:idx_progress_question;index" json:"question_id"`
+	AnswerID       uint `gorm:"not null;index"           json:"answer_id"`
+	IsCorrect      bool `gorm:"not null;default:false"   json:"is_correct"`
 
 	Question Question `gorm:"foreignKey:QuestionID" json:"question,omitempty"`
 	Answer   Answer   `gorm:"foreignKey:AnswerID"   json:"answer,omitempty"`

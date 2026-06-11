@@ -86,3 +86,20 @@ func (r *assignmentRepo) UpdateTestProgress(p *models.TestProgress) error {
 func (r *assignmentRepo) AddIncorrectAnswer(ia *models.IncorrectAnswer) error {
 	return r.db.Create(ia).Error
 }
+
+func (r *assignmentRepo) UpsertTestAnswer(ta *models.TestAnswer) error {
+	var existing models.TestAnswer
+	err := r.db.Where("test_progress_id = ? AND question_id = ?", ta.TestProgressID, ta.QuestionID).First(&existing).Error
+	if err == nil {
+		ta.ID = existing.ID
+		return r.db.Save(ta).Error
+	}
+	return r.db.Create(ta).Error
+}
+
+func (r *assignmentRepo) FindTestAnswers(testProgressID uint) ([]models.TestAnswer, error) {
+	var list []models.TestAnswer
+	err := r.db.Preload("Question").Preload("Question.Answers").Preload("Answer").
+		Where("test_progress_id = ?", testProgressID).Find(&list).Error
+	return list, err
+}

@@ -31,7 +31,7 @@ func NewAssignmentService(
 }
 
 type AssignRequest struct {
-	TargetType string // "course" | "test"
+	TargetType string
 	TargetID   uint
 	UserIDs    []uint
 	AssignAll  bool
@@ -95,11 +95,11 @@ func (s *AssignmentService) Assign(req AssignRequest) error {
 }
 
 type AssignBatchRequest struct {
-	TargetTypes []string
-	CourseID    uint
-	TestID      uint
-	UserIDs     []uint
-	AssignAll   bool
+	TargetTypes []string `json:"target_types"`
+	CourseID    uint     `json:"course_id"`
+	TestID      uint     `json:"test_id"`
+	UserIDs     []uint   `json:"user_ids"`
+	AssignAll   bool     `json:"assign_all"`
 }
 
 func (s *AssignmentService) AssignBatch(req AssignBatchRequest) error {
@@ -163,6 +163,10 @@ func (s *AssignmentService) List(targetType, status string) ([]models.Assignment
 
 func (s *AssignmentService) Delete(id uint) error {
 	return s.assignments.Delete(id)
+}
+
+func (s *AssignmentService) FindByUserAndTarget(userID, testID uint) (*models.Assignment, error) {
+	return s.assignments.FindByUserAndTarget(userID, models.AssignmentTypeTest, testID)
 }
 
 func (s *AssignmentService) OpenCourse(userID, courseID uint) (*models.Assignment, *models.CourseProgress, error) {
@@ -250,7 +254,32 @@ func (s *AssignmentService) SubmitAnswer(
 		})
 	}
 
+	if err := s.assignments.UpsertTestAnswer(&models.TestAnswer{
+		TestProgressID: prog.ID,
+		QuestionID:     questionID,
+		AnswerID:       answerID,
+		IsCorrect:      isCorrect,
+	}); err != nil {
+		return err
+	}
+
 	return s.assignments.UpdateTestProgress(prog)
+}
+
+func (s *AssignmentService) GetTestResults(assignmentID uint) (*models.Assignment, *models.TestProgress, []models.TestAnswer, error) {
+	a, err := s.assignments.FindByID(assignmentID)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	prog, err := s.assignments.FindOrCreateTestProgress(a.ID)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	answers, err := s.assignments.FindTestAnswers(prog.ID)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	return a, prog, answers, nil
 }
 
 func (s *AssignmentService) CompleteTest(userID, testID uint) error {

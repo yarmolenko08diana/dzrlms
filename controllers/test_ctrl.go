@@ -148,7 +148,12 @@ func (tc *TestController) EmployeeView(c *gin.Context) {
 		return
 	}
 
-	idx, _ := strconv.Atoi(c.Query("idx"))
+	var idx int
+	if q := c.Query("idx"); q != "" {
+		idx, _ = strconv.Atoi(q)
+	} else {
+		idx = prog.CurrentQuestionIndex
+	}
 	if idx < 0 {
 		idx = 0
 	}
@@ -192,6 +197,12 @@ func (tc *TestController) SubmitAnswer(c *gin.Context) {
 		return
 	}
 
+	if c.PostForm("is_last") == "true" {
+		tc.assnSvc.CompleteTest(userID, testID)
+		c.Redirect(http.StatusFound, "/employee/tests/"+idStr(testID)+"/results")
+		return
+	}
+
 	c.Redirect(http.StatusFound, "/employee/tests/"+idStr(testID))
 }
 
@@ -199,7 +210,45 @@ func (tc *TestController) CompleteTest(c *gin.Context) {
 	testID := parseID(c, "id")
 	userID := sessionUserID(c)
 	tc.assnSvc.CompleteTest(userID, testID)
-	c.Redirect(http.StatusFound, "/employee/dashboard")
+	c.Redirect(http.StatusFound, "/employee/tests/"+idStr(testID)+"/results")
+}
+
+func (tc *TestController) Results(c *gin.Context) {
+	testID := parseID(c, "id")
+	userID := sessionUserID(c)
+
+	a, err := tc.assnSvc.FindByUserAndTarget(userID, testID)
+	if err != nil {
+		c.Redirect(http.StatusFound, "/employee/dashboard")
+		return
+	}
+
+	test, err := tc.svc.Get(testID)
+	if err != nil {
+		c.Redirect(http.StatusFound, "/employee/dashboard")
+		return
+	}
+
+	_, prog, answers, err := tc.assnSvc.GetTestResults(a.ID)
+	if err != nil {
+		c.Redirect(http.StatusFound, "/employee/dashboard")
+		return
+	}
+
+	answersByQ := make(map[uint]models.TestAnswer, len(answers))
+	for _, ta := range answers {
+		answersByQ[ta.QuestionID] = ta
+	}
+
+	c.HTML(http.StatusOK, "employee/test_results.html", gin.H{
+		"title":      "Результаты теста",
+		"userName":   c.MustGet("session_user_name"),
+		"test":       test,
+		"assignment": a,
+		"progress":   prog,
+		"answers":    answers,
+		"answersByQ": answersByQ,
+	})
 }
 
 func idStr(id uint) string {

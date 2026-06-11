@@ -65,7 +65,7 @@ func (d *DashboardController) Admin(c *gin.Context) {
 	employees, _ := d.users.FindEmployees()
 
 	c.HTML(http.StatusOK, "admin/dashboard.html", gin.H{
-		"title":            "Дашборд",
+		"title":            "Главная панель",
 		"active":           "dashboard",
 		"userName":         c.MustGet("session_user_name"),
 		"stats":            stats,
@@ -96,13 +96,36 @@ func (d *DashboardController) Employee(c *gin.Context) {
 
 	notifs, _ := d.notif.ForUser(userID)
 
+	courses, _ := d.courses.FindAll()
+	tests, _ := d.tests.FindAll()
+
+	courseTitles := make(map[uint]string, len(courses))
+	for _, course := range courses {
+		courseTitles[course.ID] = course.Title
+	}
+	testTitles := make(map[uint]string, len(tests))
+	for _, test := range tests {
+		testTitles[test.ID] = test.Title
+	}
+
 	c.HTML(http.StatusOK, "employee/dashboard.html", gin.H{
-		"title":       "Моё обучение",
-		"userName":    c.MustGet("session_user_name"),
-		"assignments": myAssns,
-		"notStarted":  notStarted,
-		"inProgress":  inProgress,
-		"completed":   completed,
-		"notifs":      notifs,
+		"title":        "Моё обучение",
+		"userName":     c.MustGet("session_user_name"),
+		"assignments":  myAssns,
+		"notStarted":   notStarted,
+		"inProgress":   inProgress,
+		"completed":    completed,
+		"notifs":       notifs,
+		"courseTitles": courseTitles,
+		"testTitles":   testTitles,
 	})
+}
+
+func (d *DashboardController) MarkNotificationsRead(c *gin.Context) {
+	userID := sessionUserID(c)
+	if err := d.notif.MarkAllRead(userID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"ok": true})
 }

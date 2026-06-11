@@ -1,0 +1,99 @@
+{{ define "employee/test_results.html" }}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ .title }} — dzrLMS</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f0ee;--panel:#fff;--border:#edddd8;--bsoft:#f3e6e2;--text:#2c1a17;--sub:#7a5c57;--muted:#b09590;--accent:#c9796a;--abg:rgba(201,121,106,.1);--success:#5aaa82;--sbg:rgba(90,170,130,.1);--danger:#c9544a;--dbg:rgba(201,84,74,.1)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',system-ui,sans-serif;font-size:.875rem}
+.topbar{background:var(--panel);border-bottom:1px solid var(--border);padding:0 2rem;height:56px;display:flex;align-items:center;gap:1rem;box-shadow:0 1px 4px rgba(44,26,23,.05)}
+.content{max-width:760px;margin:2rem auto;padding:0 1rem 3rem}
+.summary{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1.5rem;box-shadow:0 1px 4px rgba(44,26,23,.05)}
+.summary .score{font-size:2.2rem;font-weight:700;color:var(--accent)}
+.summary .score-label{font-size:.78rem;color:var(--muted);font-weight:500}
+.q-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:1.25rem;margin-bottom:1rem;box-shadow:0 1px 4px rgba(44,26,23,.05)}
+.q-meta{font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:.6rem;display:flex;align-items:center;gap:.5rem}
+.q-text{font-size:.98rem;font-weight:600;margin-bottom:.9rem;line-height:1.5}
+.opt{padding:.6rem .85rem;border:2px solid var(--border);border-radius:10px;margin-bottom:.4rem;font-size:.85rem;display:flex;align-items:center;gap:.6rem}
+.opt.your-correct{border-color:var(--success);background:var(--sbg)}
+.opt.your-wrong{border-color:var(--danger);background:var(--dbg)}
+.opt.correct-answer{border-color:var(--success);background:var(--sbg)}
+.tag{font-size:.68rem;font-weight:700;padding:.18rem .55rem;border-radius:20px;white-space:nowrap}
+.tag-correct{background:var(--success);color:#fff}
+.tag-wrong{background:var(--danger);color:#fff}
+.tag-answer{background:var(--success);color:#fff}
+.back-link{color:var(--muted);text-decoration:none;font-size:.82rem;display:flex;align-items:center;gap:4px}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="/employee/dashboard" class="back-link"><i class="bi bi-arrow-left"></i>Главная панель</a>
+  <span style="color:var(--border)">|</span>
+  <span style="font-weight:700;color:var(--text)">{{ .test.Title }} — результаты</span>
+</div>
+
+<div class="content">
+  <div class="summary">
+    <div class="score">{{ len .answers }}</div>
+    <div>
+      <div class="score-label">Отвечено вопросов из {{ len .test.Questions }}</div>
+      {{ $correct := 0 }}
+      {{ range .answers }}{{ if .IsCorrect }}{{ $correct = add $correct 1 }}{{ end }}{{ end }}
+      <div style="font-size:1.1rem;font-weight:700;margin-top:.25rem">
+        Правильных ответов: <span style="color:var(--success)">{{ $correct }}</span> из {{ len .answers }}
+      </div>
+    </div>
+  </div>
+
+  {{ range .test.Questions }}
+  {{ $q := . }}
+  {{ $ans := index $.answersByQ .ID }}
+  <div class="q-card">
+    <div class="q-meta">Вопрос</div>
+    <div class="q-text">{{ $q.Content }}</div>
+    {{ if $q.MediaURL }}
+      {{ $yt := youtubeEmbedURL $q.MediaURL }}
+      {{ if $yt }}
+      <iframe src="{{ $yt }}" style="width:100%;height:280px;border:none;border-radius:10px;margin-bottom:1rem" allowfullscreen></iframe>
+      {{ else if isImageURL $q.MediaURL }}
+      <img src="{{ $q.MediaURL }}" style="max-width:100%;border-radius:10px;margin-bottom:1rem">
+      {{ else if isVideoURL $q.MediaURL }}
+      <video src="{{ $q.MediaURL }}" controls style="max-width:100%;border-radius:10px;margin-bottom:1rem"></video>
+      {{ else }}
+      <a href="{{ $q.MediaURL }}" target="_blank" rel="noreferrer" style="display:inline-flex;align-items:center;color:var(--accent);background:var(--abg,rgba(201,121,106,.1));padding:.5rem .85rem;border-radius:8px;margin-bottom:1rem;text-decoration:none;font-size:.85rem">
+        <i class="bi bi-box-arrow-up-right me-2"></i>{{ $q.MediaURL }}
+      </a>
+      {{ end }}
+    {{ end }}
+    {{ if $ans }}
+      {{ range $q.Answers }}
+        {{ if eq .ID $ans.AnswerID }}
+        <div class="opt {{ if $ans.IsCorrect }}your-correct{{ else }}your-wrong{{ end }}">
+          <span style="flex:1">{{ .Content }}</span>
+          {{ if $ans.IsCorrect }}<span class="tag tag-correct"><i class="bi bi-check-lg"></i> Ваш ответ — верно</span>
+          {{ else }}<span class="tag tag-wrong"><i class="bi bi-x-lg"></i> Ваш ответ — неверно</span>{{ end }}
+        </div>
+        {{ end }}
+      {{ end }}
+      {{ if not $ans.IsCorrect }}
+        {{ range $q.Answers }}
+          {{ if .IsCorrect }}
+          <div class="opt correct-answer">
+            <span style="flex:1">{{ .Content }}</span>
+            <span class="tag tag-answer"><i class="bi bi-check-lg"></i> Правильный ответ</span>
+          </div>
+          {{ end }}
+        {{ end }}
+      {{ end }}
+    {{ else }}
+    <p style="color:var(--muted);margin:0">Вопрос не был пройден.</p>
+    {{ end }}
+  </div>
+  {{ end }}
+</div>
+</body></html>
+{{ end }}

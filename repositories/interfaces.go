@@ -56,10 +56,13 @@ type AssignmentRepository interface {
 	FindOrCreateTestProgress(assignmentID uint) (*models.TestProgress, error)
 	UpdateTestProgress(p *models.TestProgress) error
 	AddIncorrectAnswer(ia *models.IncorrectAnswer) error
+	UpsertTestAnswer(ta *models.TestAnswer) error
+	FindTestAnswers(testProgressID uint) ([]models.TestAnswer, error)
 }
 
 type NotificationRepository interface {
 	Create(n *models.Notification) error
 	FindForUser(userID uint) ([]models.Notification, error)
 	MarkRead(id uint) error
+	MarkAllReadForUser(userID uint) error
 }

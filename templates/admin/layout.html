@@ -10,7 +10,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-    /* ── DZR Light Palette ─────────────────────────────────── */
     :root {
       --sidebar-w:    248px;
       --bg-base:      #f7f0ee;
@@ -49,8 +48,6 @@
       font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
       font-size: 0.875rem; line-height: 1.5;
     }
-
-    /* ── Sidebar ── */
     .sidebar {
       position: fixed; top: 0; left: 0;
       width: var(--sidebar-w); height: 100vh;
@@ -92,12 +89,6 @@
       display: flex; align-items: center; gap: 9px;
       padding: 0.45rem 0.75rem; border-radius: var(--radius-btn); margin-bottom: 4px;
     }
-    .avatar {
-      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
-      background: linear-gradient(135deg, var(--accent), var(--purple));
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.78rem; color: #fff; font-weight: 700;
-    }
     .user-name { font-weight: 600; color: var(--text-primary); font-size: 0.82rem; }
     .user-role { font-size: 0.63rem; color: var(--text-muted); }
     .btn-logout {
@@ -107,11 +98,8 @@
       transition: background 0.14s, color 0.14s; width: 100%;
     }
     .btn-logout:hover { background: var(--danger-bg); color: var(--danger); }
-
-    /* ── Main content ── */
     .main-content { margin-left: var(--sidebar-w); min-height: 100vh; padding: 2rem 2.25rem; }
 
-    /* ── Page header ── */
     .page-header {
       display: flex; align-items: flex-start; justify-content: space-between;
       margin-bottom: 1.75rem; gap: 1rem;
@@ -119,7 +107,6 @@
     .page-title { font-size: 1.45rem; font-weight: 700; color: var(--text-primary); margin: 0; letter-spacing: -0.3px; }
     .page-sub { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem; }
 
-    /* ── Cards ── */
     .card {
       background: var(--bg-card); border: 1px solid var(--border);
       border-radius: var(--radius-card); box-shadow: var(--shadow-card);
@@ -142,7 +129,6 @@
     .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--text-primary); line-height: 1; letter-spacing: -0.5px; }
     .stat-label { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem; font-weight: 500; }
 
-    /* ── Tables ── */
     .table { color: var(--text-primary); margin: 0; }
     .table thead th {
       background: var(--bg-base); color: var(--text-muted);
@@ -154,7 +140,6 @@
     .table tbody tr:hover { background: var(--bg-hover); }
     .table-responsive { border-radius: 0 0 var(--radius-card) var(--radius-card); overflow: hidden; }
 
-    /* ── Badges ── */
     .badge { font-size: 0.68rem; font-weight: 600; padding: 0.3rem 0.7rem; border-radius: var(--radius-badge); letter-spacing: 0.2px; }
     .badge-not-started { background: rgba(176,149,144,0.15); color: var(--text-sub); }
     .badge-in-progress { background: var(--warning-bg); color: var(--warning); }
@@ -162,7 +147,6 @@
     .badge-accent      { background: var(--accent-bg); color: var(--accent); }
     .badge-purple      { background: var(--purple-bg); color: var(--purple); }
 
-    /* ── Buttons ── */
     .btn-primary-custom {
       background: var(--accent); border: none; color: #fff;
       border-radius: var(--radius-btn); padding: 0.5rem 1.1rem;
@@ -197,7 +181,6 @@
     }
     .btn-cancel:hover { background: var(--border-soft); color: var(--text-primary); }
 
-    /* ── Forms ── */
     .form-control, .form-select {
       background: var(--bg-base); border: 1px solid var(--border);
       color: var(--text-primary); border-radius: var(--radius-btn);
@@ -216,16 +199,13 @@
     }
     textarea.form-control { resize: vertical; min-height: 90px; }
 
-    /* ── Alerts ── */
     .alert-danger  { background: var(--danger-bg); border: 1px solid rgba(201,92,92,0.25); color: var(--danger); border-radius: var(--radius-btn); }
     .alert-success { background: var(--success-bg); border: 1px solid rgba(90,170,130,0.25); color: var(--success); border-radius: var(--radius-btn); }
 
-    /* ── Empty state ── */
     .empty-state { text-align: center; padding: 3.5rem 2rem; color: var(--text-muted); }
     .empty-state i { font-size: 2.5rem; display: block; margin-bottom: 0.75rem; opacity: 0.5; }
     .empty-state a { color: var(--accent); }
 
-    /* ── Modal overlay ── */
     .modal-overlay {
       display: none; position: fixed; inset: 0;
       background: rgba(44,26,23,0.40); backdrop-filter: blur(3px);
@@ -246,7 +226,6 @@
     }
     .modal-close-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
 
-    /* ── Chip selector ── */
     .chip-list { display: flex; flex-wrap: wrap; gap: 0.4rem; max-height: 170px; overflow-y: auto; }
     .chip-label {
       display: inline-flex; align-items: center; gap: 5px; cursor: pointer;
@@ -260,19 +239,6 @@
     .chip-dot { width: 7px; height: 7px; border-radius: 50%; background: transparent; transition: background 0.14s; flex-shrink: 0; }
     .chip-label.selected .chip-dot { background: var(--success); }
 
-    /* ── Avatar helpers ── */
-    .emp-avatar {
-      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
-      background: linear-gradient(135deg, var(--accent), var(--purple));
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.78rem; color: #fff; font-weight: 700;
-    }
-    .emp-avatar-lg {
-      width: 72px; height: 72px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent), var(--purple));
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.75rem; color: #fff; font-weight: 700; margin: 0 auto 1rem;
-    }
     .course-icon-sm {
       width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0;
       background: var(--purple-bg);

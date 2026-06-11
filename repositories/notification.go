@@ -22,3 +22,7 @@ func (r *notifRepo) FindForUser(userID uint) ([]models.Notification, error) {
 func (r *notifRepo) MarkRead(id uint) error {
 	return r.db.Model(&models.Notification{}).Where("id = ?", id).Update("read", true).Error
 }
+
+func (r *notifRepo) MarkAllReadForUser(userID uint) error {
+	return r.db.Model(&models.Notification{}).Where("user_id = ? AND read = ?", userID, false).Update("read", true).Error
+}

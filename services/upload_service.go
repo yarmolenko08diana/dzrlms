@@ -6,6 +6,7 @@ import (
 	"mime/multipart"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,6 +20,17 @@ type UploadService struct {
 func NewUploadService(uploadDir, baseURL string) *UploadService {
 	os.MkdirAll(uploadDir, 0755)
 	return &UploadService{uploadDir: uploadDir, baseURL: baseURL}
+}
+
+func (s *UploadService) DeleteFile(url string) {
+	if url == "" || !strings.HasPrefix(url, s.baseURL+"/") {
+		return
+	}
+	name := strings.TrimPrefix(url, s.baseURL+"/")
+	if strings.Contains(name, "/") || strings.Contains(name, "..") {
+		return
+	}
+	os.Remove(filepath.Join(s.uploadDir, name))
 }
 
 func (s *UploadService) Save(fh *multipart.FileHeader) (string, error) {

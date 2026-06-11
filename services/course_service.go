@@ -8,10 +8,11 @@ import (
 
 type CourseService struct {
 	courses repositories.CourseRepository
+	upload  *UploadService
 }
 
-func NewCourseService(courses repositories.CourseRepository) *CourseService {
-	return &CourseService{courses: courses}
+func NewCourseService(courses repositories.CourseRepository, upload *UploadService) *CourseService {
+	return &CourseService{courses: courses, upload: upload}
 }
 
 func (s *CourseService) List() ([]models.Course, error) {
@@ -123,5 +124,14 @@ func (s *CourseService) Publish(courseID uint) error {
 }
 
 func (s *CourseService) Delete(id uint) error {
+	if c, err := s.courses.FindWithSlides(id); err == nil {
+		for _, slide := range c.Slides {
+			for _, b := range slide.Blocks {
+				if b.Type == "image" || b.Type == "video" {
+					s.upload.DeleteFile(b.Content)
+				}
+			}
+		}
+	}
 	return s.courses.Delete(id)
 }

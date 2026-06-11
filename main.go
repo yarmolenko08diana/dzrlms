@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -12,6 +13,39 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+var youtubeRe = regexp.MustCompile(`(?:youtube\.com/watch\?v=|youtu\.be/)([a-zA-Z0-9_-]{11})`)
+
+func youtubeEmbedURL(url string) string {
+	m := youtubeRe.FindStringSubmatch(url)
+	if m == nil {
+		return ""
+	}
+	return "https://www.youtube.com/embed/" + m[1]
+}
+
+var videoExts = []string{".mp4", ".webm", ".ogg", ".mov", ".m4v"}
+var imageExts = []string{".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"}
+
+func isVideoURL(url string) bool {
+	lower := strings.ToLower(url)
+	for _, ext := range videoExts {
+		if strings.HasSuffix(lower, ext) {
+			return true
+		}
+	}
+	return strings.Contains(lower, "youtube.com") || strings.Contains(lower, "youtu.be")
+}
+
+func isImageURL(url string) bool {
+	lower := strings.ToLower(url)
+	for _, ext := range imageExts {
+		if strings.HasSuffix(lower, ext) {
+			return true
+		}
+	}
+	return false
+}
 
 func main() {
 	db.Connect()
@@ -34,6 +68,9 @@ func main() {
 		"contains":    func(s, substr string) bool { return strings.Contains(s, substr) },
 		"isCourse":    func(s string) bool { return s == "course" },
 		"isTest":      func(s string) bool { return s == "test" },
+		"isVideoURL":      isVideoURL,
+		"isImageURL":      isImageURL,
+		"youtubeEmbedURL": youtubeEmbedURL,
 	})
 
 	r.LoadHTMLGlob("templates/**/*.html")
@@ -47,7 +84,7 @@ func main() {
 		port = "8080"
 	}
 	log.Printf("LMS запущен: http://localhost:%s", port)
-	if err := r.Run(":" + port); err != nil {
+	if err := r.Run("127.0.0.1:" + port); err != nil {
 		log.Fatalf("Server error: %v", err)
 	}
 }

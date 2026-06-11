@@ -21,7 +21,7 @@ func Connect() {
 		" password=" + getEnv("DB_PASSWORD", "postgres") +
 		" dbname=" + getEnv("DB_NAME", "lms_db") +
 		" port=" + getEnv("DB_PORT", "5432") +
-		" sslmode=disable TimeZone=UTC"
+		" sslmode=disable TimeZone=UTC client_encoding=UTF8"
 
 	var err error
 
@@ -61,6 +61,7 @@ func Migrate() {
 		&models.CourseProgress{},
 		&models.TestProgress{},
 		&models.IncorrectAnswer{},
+		&models.TestAnswer{},
 
 		&models.Notification{},
 	)
@@ -110,68 +111,6 @@ func Seed() {
 		}
 
 		log.Println("Seeded employees")
-	}
-
-	var courseCount int64
-	DB.Model(&models.Course{}).Count(&courseCount)
-
-	if courseCount == 0 {
-
-		course := models.Course{
-			Title:       "Кибербезопасность",
-			Description: "Основы кибербезопасности",
-			Duration:    "2 часа",
-			Published:   true,
-		}
-
-		DB.Create(&course)
-
-		slide := models.Slide{
-			CourseID:   course.ID,
-			OrderIndex: 0,
-			Title:      "Введение",
-		}
-
-		DB.Create(&slide)
-
-		DB.Create(&models.Block{
-			SlideID: slide.ID,
-			Type:    "text",
-			Content: "Добро пожаловать в курс",
-			X: 60, Y: 60, W: 600, H: 80,
-		})
-
-		log.Println("Seeded sample course")
-	}
-
-	var testCount int64
-	DB.Model(&models.Test{}).Count(&testCount)
-
-	if testCount == 0 {
-
-		test := models.Test{
-			Title:       "Тест по кибербезопасности",
-			Description: "Проверка знаний",
-			Published:   true,
-		}
-
-		DB.Create(&test)
-
-		q := models.Question{
-			TestID:     test.ID,
-			Content:    "Что такое фишинг?",
-			OrderIndex: 0,
-		}
-
-		DB.Create(&q)
-
-		DB.Create(&models.Answer{
-			QuestionID: q.ID,
-			Content:    "Кибератака через поддельные письма",
-			IsCorrect:  true,
-		})
-
-		log.Println("Seeded sample test")
 	}
 }
 

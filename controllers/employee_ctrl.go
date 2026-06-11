@@ -87,18 +87,3 @@ func (e *EmployeeController) Delete(c *gin.Context) {
 	e.users.Delete(uint(id))
 	c.Redirect(http.StatusFound, "/admin/employees")
 }
-
-func (e *EmployeeController) Profile(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	user, err := e.users.FindByID(uint(id))
-	if err != nil {
-		c.Redirect(http.StatusFound, "/admin/employees")
-		return
-	}
-	c.HTML(http.StatusOK, "admin/employee_profile.html", gin.H{
-		"title":    user.Name,
-		"active":   "employees",
-		"userName": c.MustGet("session_user_name"),
-		"employee": user,
-	})
-}
