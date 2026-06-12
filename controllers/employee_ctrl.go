@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 
@@ -84,6 +85,8 @@ func (e *EmployeeController) Update(c *gin.Context) {
 
 func (e *EmployeeController) Delete(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	e.users.Delete(uint(id))
+	if err := e.users.Delete(uint(id)); err != nil {
+		log.Printf("employee delete failed: %v", err)
+	}
 	c.Redirect(http.StatusFound, "/admin/employees")
 }
