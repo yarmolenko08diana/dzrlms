@@ -40,8 +40,58 @@ func (r *testRepo) FindWithQuestions(id uint) (*models.Test, error) {
 
 func (r *testRepo) Create(t *models.Test) error { return r.db.Create(t).Error }
 func (r *testRepo) Update(t *models.Test) error { return r.db.Save(t).Error }
+
 func (r *testRepo) Delete(id uint) error {
-	return r.db.Select("Questions.Answers").Delete(&models.Test{}, id).Error
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		var questionIDs []uint
+		if err := tx.Model(&models.Question{}).
+			Where("test_id = ?", id).
+			Pluck("id", &questionIDs).Error; err != nil {
+			return err
+		}
+
+		if len(questionIDs) > 0 {
+			if err := tx.Where("question_id IN ?", questionIDs).
+				Delete(&models.IncorrectAnswer{}).Error; err != nil {
+				return err
+			}
+			if err := tx.Where("question_id IN ?", questionIDs).
+				Delete(&models.TestAnswer{}).Error; err != nil {
+				return err
+			}
+		}
+
+		var assnIDs []uint
+		if err := tx.Model(&models.Assignment{}).
+			Where("target_type = ? AND target_id = ?", models.AssignmentTypeTest, id).
+			Pluck("id", &assnIDs).Error; err != nil {
+			return err
+		}
+
+		if len(assnIDs) > 0 {
+			if err := tx.Where("assignment_id IN ?", assnIDs).
+				Delete(&models.TestProgress{}).Error; err != nil {
+				return err
+			}
+			if err := tx.Where("id IN ?", assnIDs).
+				Delete(&models.Assignment{}).Error; err != nil {
+				return err
+			}
+		}
+
+		if len(questionIDs) > 0 {
+			if err := tx.Where("question_id IN ?", questionIDs).
+				Delete(&models.Answer{}).Error; err != nil {
+				return err
+			}
+			if err := tx.Where("test_id = ?", id).
+				Delete(&models.Question{}).Error; err != nil {
+				return err
+			}
+		}
+
+		return tx.Delete(&models.Test{}, id).Error
+	})
 }
 
 func (r *testRepo) UpsertQuestion(q *models.Question) error {

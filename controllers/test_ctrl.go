@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"lms/models"
@@ -110,7 +111,9 @@ func (tc *TestController) Publish(c *gin.Context) {
 }
 
 func (tc *TestController) Delete(c *gin.Context) {
-	tc.svc.Delete(parseID(c, "id"))
+	if err := tc.svc.Delete(parseID(c, "id")); err != nil {
+		log.Printf("test delete failed: %v", err)
+	}
 	c.Redirect(http.StatusFound, "/admin/tests")
 }
 
